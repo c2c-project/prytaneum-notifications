@@ -2,7 +2,21 @@ import app from 'app';
 import connect from 'db/connect';
 import env from 'config/env';
 
-// eslint-disable-next-line no-void
-void connect();
+async function makeServer() {
+    try {
+        /* 
+            this is so that we can guarantee we are connected to the db
+            before the server exposes itself on a port
+        */
+        await connect();
+        app.listen(Number(env.PORT), env.ORIGIN);
+    } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+        // eslint-disable-next-line no-console
+        console.log('Exiting...');
+    }
+}
 
-app.listen(Number(env.PORT), env.ORIGIN);
+// eslint-disable-next-line no-void
+void makeServer();
