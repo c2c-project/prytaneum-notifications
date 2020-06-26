@@ -3,7 +3,7 @@ services:
     service-base: # rename this to something like <yourservicename>-service
         build: .
         volumes:
-            - .:/usr/src/app
+            - ./src:/usr/app/src
         ports:
             - '3000:3000'
         ###### uncomment below as appropriate

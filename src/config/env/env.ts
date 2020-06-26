@@ -5,9 +5,9 @@ const { env } = process;
 
 export const defaults = {
     NODE_ENV: 'development',
-    PORT: '3001',
-    ORIGIN: 'localhost',
-    DB_URL: 'mongodb://localhost:27017',
+    PORT: '3000',
+    ORIGIN: '0.0.0.0',
+    DB_URL: 'mongodb://0.0.0.0:27017',
 } as Readonly<Required<NodeJS.ProcessEnv>>;
 
 export function set(key: keyof NodeJS.ProcessEnv): string {

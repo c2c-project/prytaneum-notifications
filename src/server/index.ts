@@ -10,6 +10,7 @@ async function makeServer() {
         */
         await connect();
         app.listen(Number(env.PORT), env.ORIGIN);
+        console.log(`http://${env.ORIGIN}:${env.PORT}`)
     } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
