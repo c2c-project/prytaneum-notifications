@@ -1,6 +1,6 @@
-# Service Base
+# Notification Service
 
-Skeleton base for services
+A service to handle notifications for Prytaneum.
 
 ## List of files to modify
 
