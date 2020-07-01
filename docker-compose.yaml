@@ -7,14 +7,14 @@ services:
         ports:
             - '3000:3000'
         ###### uncomment below as appropriate
-        # depends_on:
-        #     - mongo
+        depends_on:
+            - mongo
         #     - postgresql
         #     - rabbitmq
         #     - redis
     ###### uncomment the correponsing db's/services you need
-    # mongo:
-    #     image: mongo:4.2.8-bionic
+    mongo:
+        image: mongo:4.2.8-bionic
     # postgresql:
     #     image: postgres:12.3
     # redis:
