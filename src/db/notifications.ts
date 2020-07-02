@@ -41,7 +41,7 @@ export default (function () {
             console.log(`Removing ${email} from unsub list.`);
             return;
         },
-        async subscribeUser(data: Array<any>) {
+        async subscribeUser(data: any) {
             throwIfNotInitialized();
             console.log('Subscribing user.');
             return;
