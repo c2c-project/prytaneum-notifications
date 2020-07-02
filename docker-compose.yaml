@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-    service-base: # rename this to something like <yourservicename>-service
+    notification-service: # rename this to something like <yourservicename>-service
         build: .
         volumes:
             - ./src:/usr/app/src

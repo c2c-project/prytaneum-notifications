@@ -1,5 +1,5 @@
 {
-    "name": "service-base",
+    "name": "notification-service",
     "version": "1.0.0",
     "main": "index.js",
     "license": "MIT",
