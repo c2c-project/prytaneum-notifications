@@ -1,5 +1,13 @@
+import { Collection, ObjectId } from 'mongodb';
+import Mongo from './mongo';
+
+export interface NotificationDoc {
+    _id?: ObjectId;
+}
+
 export default (function () {
     let initialized = false;
+    let collection: Collection<NotificationDoc>;
 
     const throwIfNotInitialized = () => {
         if (!initialized) {
@@ -8,10 +16,18 @@ export default (function () {
     };
 
     return {
-        isInitialized() {
+        isInitialized(): Boolean {
             return initialized;
         },
-        async getUnsubList() {
+        async init(): Promise<void> {
+            if (!initialized) {
+                collection = await Mongo.collection<NotificationDoc>(
+                    'notifications'
+                );
+                initialized = true;
+            }
+        },
+        async getUnsubList(): Promise<Array<string>> {
             throwIfNotInitialized();
             return ['email@example.com'];
         },
