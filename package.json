@@ -43,6 +43,7 @@
     },
     "dependencies": {
         "@babel/runtime": "^7.10.3",
+        "@types/mailgun-js": "^0.22.8",
         "amqp": "^0.2.7",
         "cookie-parser": "^1.4.5",
         "debug": "^4.1.1",
@@ -50,6 +51,7 @@
         "express": "^4.17.1",
         "helmet": "^3.23.1",
         "http-errors": "^1.7.3",
+        "mailgun-js": "^0.22.0",
         "mongodb": "^3.5.9",
         "morgan": "^1.10.0"
     }
