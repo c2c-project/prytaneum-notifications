@@ -5,6 +5,10 @@ declare global {
             PORT?: string;
             ORIGIN?: string;
             DB_URL?: string;
+            MAILGUN_ORIGIN?: string;
+            MAILGUN_API_KEY?: string,
+            MAILGUN_DOMAIN?: string,
+            MAILGUN_FROM_EMAIL?: string,
         }
     }
 }
