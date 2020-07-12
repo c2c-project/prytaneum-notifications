@@ -1,0 +1,11 @@
+[{
+		"region": "west_coast",
+		"unsubscribeList": ["sara@example.com"],
+		"subscribeList": ["jack@example.com"]
+	},
+	{
+		"region": "east_coast",
+		"unsubscribeList": ["ryan@example.com"],
+		"subscribeList": []
+	}
+]
