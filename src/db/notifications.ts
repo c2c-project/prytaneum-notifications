@@ -5,6 +5,7 @@ export interface NotificationDoc {
     _id: ObjectId;
     region: string;
     unsubscribeList: Array<string>;
+    subscribeList: Array<string>;
 }
 
 export default (): Collection<NotificationDoc> =>

@@ -1,6 +1,5 @@
-import { UpdateWriteOpResult } from 'mongodb';
-
-import Collections from 'db';
+import Collections, { NotificationDoc } from 'db';
+import { UpdateWriteOpResult, Cursor } from 'mongodb';
 
 /**
  * @description fetches the relevant up to date unsubscribed list from the database
@@ -8,11 +7,24 @@ import Collections from 'db';
  * @return {Promise<Array<string>>} A Promise that resolves to an array of strings
  */
 const getUnsubList = async (region: string): Promise<Array<string>> => {
-	const doc = await Collections.Notifications().findOne({ region });
-	if (doc) {
-		return doc.unsubscribeList;
-	}
-	throw new Error('Error getting the unsubscribe list from the database');
+    const doc = await Collections.Notifications().findOne({ region });
+    if (doc) {
+        return doc.unsubscribeList;
+    }
+    throw new Error('Error getting the unsubscribe list from the database');
+};
+
+/**
+ * @description fetches the relevant up to date subscribed list from the database
+ * @param {string} region region that relates to the data
+ * @return {Promise<Array<string>>} A Promise that resolves to an array of strings
+ */
+const getSubList = async (region: string): Promise<Array<string>> => {
+    const doc = await Collections.Notifications().findOne({ region });
+    if (doc) {
+        return doc.subscribeList;
+    }
+    throw new Error('Error getting the unsubscribe list from the database');
 };
 
 /**
@@ -21,9 +33,12 @@ const getUnsubList = async (region: string): Promise<Array<string>> => {
  * @param {string} region region that relates to the data
  * @return {Promise<UpdateWriteOpResult>} Promise that resolves to a MongoDB cursor on success
  */
-const addToUnsubList = async (email: string, region: string): Promise<any> => {
-	const query = { $push: { unsubscribeList: email } };
-	return Collections.Notifications().updateOne({ region }, query);
+const addToUnsubList = async (
+    email: string,
+    region: string
+): Promise<UpdateWriteOpResult> => {
+    const query = { $push: { unsubscribeList: email } };
+    return Collections.Notifications().updateOne({ region }, query);
 };
 
 /**
@@ -32,9 +47,12 @@ const addToUnsubList = async (email: string, region: string): Promise<any> => {
  * @param {string} region region that relates to the data
  * @return {Proise<UpdateWriteOpResult>} Promise that resolves to a MongoDB cursor on success
  */
-const removeFromUnsubList = async (email: string, region: string): Promise<any> => {
-	const query = { $pull: { unsubscribeList: email } };
-	return Collections.Notifications().updateOne({ region }, query);
+const removeFromUnsubList = async (
+    email: string,
+    region: string
+): Promise<UpdateWriteOpResult> => {
+    const query = { $pull: { unsubscribeList: email } };
+    return Collections.Notifications().updateOne({ region }, query);
 };
 
 /**
@@ -43,14 +61,72 @@ const removeFromUnsubList = async (email: string, region: string): Promise<any> 
  * @param {string} region region that relates to the data
  * @return {Promise<UpdateWriteOpResult>} Promise that respoves to a MongoDB cursor
  */
-const subscribeUser = async (email: string, region: string): Promise<any> => {
-	const query = { $push: { subscribeList: email } };
-	return Collections.Notifications().updateOne({ region }, query);
+const addToSubList = async (
+    email: string,
+    region: string
+): Promise<UpdateWriteOpResult> => {
+    const query = { $push: { subscribeList: email } };
+    return Collections.Notifications().updateOne({ region }, query);
+};
+
+/**
+ * @descritpion removes an email from the relevant subscribed list in the database
+ * @param {string} email email to be added to the list
+ * @param {string} region region that relates to the data
+ * @return {Proise<UpdateWriteOpResult>} Promise that resolves to a MongoDB cursor on success
+ */
+const removeFromSubList = async (
+    email: string,
+    region: string
+): Promise<UpdateWriteOpResult> => {
+    const query = { $pull: { subscribeList: email } };
+    return Collections.Notifications().updateOne({ region }, query);
+};
+
+/**
+ * @descritpion Checks if a given email is in the relevant subscribe list
+ * @param {string} email email to be added to the list
+ * @param {string} region region that relates to the data
+ * @return {Promise<boolean>} Promise that resolves to a boolean
+ */
+const isSubscribed = async (
+    email: string,
+    region: string
+): Promise<boolean> => {
+    // const query = { subscribeList: { $elemMatch: email } };
+    const doc = await Collections.Notifications().findOne({ region });
+    if (doc === null) {
+        throw new Error('Error finding region document');
+    }
+    const subscribeList = doc.subscribeList;
+    return subscribeList.includes(email);
+};
+
+/**
+ * @descritpion Checks if a given email is in the relevant unsubscribe list
+ * @param {string} email email to be added to the list
+ * @param {string} region region that relates to the data
+ * @return {Promise<boolean>} Promise that resolves to a boolean
+ */
+const isUnsubscribed = async (
+    email: string,
+    region: string
+): Promise<boolean> => {
+    const doc = await Collections.Notifications().findOne({ region });
+    if (doc === null) {
+        throw new Error('Error finding region document');
+    }
+    const unsubscribeList = doc.unsubscribeList;
+    return unsubscribeList.includes(email);
 };
 
 export default {
-	getUnsubList,
-	addToUnsubList,
-	removeFromUnsubList,
-	subscribeUser,
+    getUnsubList,
+    getSubList,
+    addToUnsubList,
+    removeFromUnsubList,
+    addToSubList,
+    removeFromSubList,
+    isSubscribed,
+    isUnsubscribed,
 };
