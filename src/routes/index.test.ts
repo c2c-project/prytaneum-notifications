@@ -10,4 +10,21 @@ describe('index', () => {
             expect(text).toEqual('Hello world!');
         });
     });
+    describe('/notify-many', () => {
+        it('should accept valid data', async () => {
+            const body = {
+                data: [
+                    {
+                        email: 'sara@example.com',
+                        name: 'Sara Jones',
+                    },
+                ],
+                region: 'west_coast',
+            };
+            const { status } = await request(app)
+                .post('/notify-many')
+                .send(body);
+            expect(status).toStrictEqual(200);
+        });
+    });
 });

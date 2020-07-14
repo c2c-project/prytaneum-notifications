@@ -13,7 +13,7 @@ services:
         image: mongo:4.2.8-bionic
         ports:
             - '3001:27017'
-    mongo-seed:
-        build: ./mongo-seed
-        links:
-            - mongo
+    # mongo-seed:
+    #     build: ./mongo-seed
+    #     links:
+    #         - mongo

@@ -1,5 +1,5 @@
 import app from 'app';
-import connect from 'db/connect';
+import { connect } from 'db';
 import env from 'config/env';
 
 async function makeServer() {
@@ -10,7 +10,7 @@ async function makeServer() {
         */
         await connect();
         app.listen(Number(env.PORT), env.ORIGIN);
-        console.log(`http://${env.ORIGIN}:${env.PORT}`)
+        console.log(`http://${env.ORIGIN}:${env.PORT}`);
     } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
