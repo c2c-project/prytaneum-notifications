@@ -5,51 +5,85 @@ import Email from '../lib/email';
 
 const router = express.Router();
 
+interface InviteeData {
+    email: string;
+    fName: string;
+    lName: string;
+}
+
+//TODO Change Notify to Invite
+interface NotifyManyData {
+    inviteeList: Array<InviteeData>;
+    MoC: string;
+    topic: string;
+    eventDateTime: string;
+    constituentScope: string;
+    region: string;
+}
+
 router.post('/notify-many', async (req, res, next) => {
     try {
-        const body = req.body;
-        const data = body.data;
-        if (body === undefined || data === undefined) {
-            throw new Error('Undefined Data');
-        }
-        const unsubList = await Notifications.getUnsubList(body.region);
-        const filteredData = data.filter((item: any) => {
-            return !unsubList.includes(item.email);
-        });
-        Email.notifyMany(filteredData);
+        const { data } = req.body as { data: NotifyManyData };
+        const unsubList = await Notifications.getUnsubList(data.region);
+        const filteredInviteeList = data.inviteeList.filter(
+            (item: InviteeData) => {
+                return !unsubList.includes(item.email);
+            }
+        );
+        Email.inviteMany(filteredInviteeList);
         res.status(200).send();
     } catch (e) {
         next(e);
     }
 });
+
+interface NotifyOneData {
+    email: string;
+    fName: string;
+    MoC: string;
+    topic: string;
+    eventDateTime: string;
+    constituentScope: string;
+    region: string;
+}
 
 router.post('/notify-one', async (req, res, next) => {
     try {
-        const data = req.body;
-        const { email, region } = data;
-        if (req.body === undefined || data === undefined) {
-            throw new Error('Undefined Data');
-        }
-        if (Notifications.isUnsubscribed(email, region))
-            throw new Error('Cannot notify unsubscribed user');
-        Email.notifyOne(data);
+        const { data } = req.body as { data: NotifyOneData };
+        const isUnsubscribed = await Notifications.isUnsubscribed(
+            data.email,
+            data.region
+        );
+        if (isUnsubscribed) throw new Error('Cannot notify unsubscribed user');
+        Email.inviteOne(
+            data.email,
+            data.fName,
+            data.MoC,
+            data.topic,
+            data.eventDateTime,
+            data.constituentScope
+        );
         res.status(200).send();
     } catch (e) {
         next(e);
     }
 });
 
+interface SubscribeData {
+    email: string;
+    region: string;
+}
+
 router.post('/subscribe', async (req, res, next) => {
     try {
-        const { email, region } = req.body.data;
-        //const unsubList = await Notifications.getUnsubList(region);
+        const { data } = req.body as { data: SubscribeData };
         const isUnsubscribed = await Notifications.isUnsubscribed(
-            email,
-            region
+            data.email,
+            data.region
         );
-        console.log(isUnsubscribed);
-        if (isUnsubscribed) Notifications.removeFromUnsubList(email, region);
-        Notifications.addToSubList(email, region);
+        if (isUnsubscribed)
+            Notifications.removeFromUnsubList(data.email, data.region);
+        Notifications.addToSubList(data.email, data.region);
         res.status(200).send();
     } catch (e) {
         next(e);
@@ -58,14 +92,15 @@ router.post('/subscribe', async (req, res, next) => {
 
 router.post('/unsubscribe', async (req, res, next) => {
     try {
-        const { email, region } = req.body.data;
-        //const subList = await Notifications.getSubList(region);
-        const isSubscribed = await Notifications.isSubscribed(email, region);
-        console.log(isSubscribed);
+        const { data } = req.body as { data: SubscribeData };
+        const isSubscribed = await Notifications.isSubscribed(
+            data.email,
+            data.region
+        );
         if (isSubscribed) {
-            Notifications.removeFromSubList(email, region);
+            Notifications.removeFromSubList(data.email, data.region);
         }
-        Notifications.addToUnsubList(email, region);
+        Notifications.addToUnsubList(data.email, data.region);
         res.status(200).send();
     } catch (e) {
         next(e);
