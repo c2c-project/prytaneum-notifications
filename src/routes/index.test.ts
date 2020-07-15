@@ -6,13 +6,24 @@ import {
     InviteOneData,
     SubscribeData,
 } from './index';
-import Collections, { connect, close } from 'db';
+import Collections, { connect, close, NotificationDoc } from 'db';
+import { ObjectId } from 'mongodb';
+
+const _id: ObjectId = new ObjectId();
+const testDoc: NotificationDoc = {
+    _id,
+    unsubscribeList: ['unsubscribed@example.com'],
+    subscribeList: ['subscribed@example.com'],
+    region: 'test',
+};
 
 beforeAll(async () => {
     await connect();
+    await Collections.Notifications().insertOne(testDoc);
 });
 
 afterAll(async () => {
+    await Collections.Notifications().deleteOne({ _id });
     await close();
 });
 
