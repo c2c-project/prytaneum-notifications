@@ -34,7 +34,7 @@ const getSubList = async (region: string): Promise<Array<string>> => {
  * @return {Promise<UpdateWriteOpResult>} Promise that resolves to a MongoDB cursor on success
  */
 const addToUnsubList = async (email: string, region: string): Promise<UpdateWriteOpResult> => {
-	const query = { $push: { unsubscribeList: email } };
+	const query = { $addToSet: { unsubscribeList: email } };
 	return Collections.Notifications().updateOne({ region }, query);
 };
 
@@ -56,7 +56,7 @@ const removeFromUnsubList = async (email: string, region: string): Promise<Updat
  * @return {Promise<UpdateWriteOpResult>} Promise that respoves to a MongoDB cursor
  */
 const addToSubList = async (email: string, region: string): Promise<UpdateWriteOpResult> => {
-	const query = { $push: { subscribeList: email } };
+	const query = { $addToSet: { subscribeList: email } };
 	return Collections.Notifications().updateOne({ region }, query);
 };
 
