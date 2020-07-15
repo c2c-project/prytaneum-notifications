@@ -6,7 +6,7 @@ describe('env', () => {
         it('should fail', () => {
             expect(() => set('FAKE_ENV_KEY')).toThrow();
         });
-        it('shoudl warn if using default', () => {
+        it('should warn if using default', () => {
             // spy
             const spy = jest
                 .spyOn(console, 'warn')
