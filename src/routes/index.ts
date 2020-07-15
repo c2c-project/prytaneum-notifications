@@ -3,16 +3,18 @@ import express from 'express';
 import Notifications from '../lib/notifications';
 import Email from '../lib/email';
 
+import env from '../config/env';
+
 const router = express.Router();
 
-interface InviteeData {
+export interface InviteeData {
     email: string;
     fName: string;
     lName: string;
 }
 
 //TODO Change Notify to Invite
-interface NotifyManyData {
+export interface NotifyManyData {
     inviteeList: Array<InviteeData>;
     MoC: string;
     topic: string;
@@ -23,7 +25,7 @@ interface NotifyManyData {
 
 router.post('/notify-many', async (req, res, next) => {
     try {
-        const { data } = req.body as { data: NotifyManyData };
+        const data: NotifyManyData = req.body;
         const unsubList = await Notifications.getUnsubList(data.region);
         const filteredInviteeList = data.inviteeList.filter(
             (item: InviteeData) => {
@@ -37,9 +39,10 @@ router.post('/notify-many', async (req, res, next) => {
     }
 });
 
-interface NotifyOneData {
+export interface NotifyOneData {
     email: string;
     fName: string;
+    lName: string;
     MoC: string;
     topic: string;
     eventDateTime: string;
@@ -49,7 +52,7 @@ interface NotifyOneData {
 
 router.post('/notify-one', async (req, res, next) => {
     try {
-        const { data } = req.body as { data: NotifyOneData };
+        const data: NotifyOneData = req.body;
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
             data.region
@@ -69,18 +72,30 @@ router.post('/notify-one', async (req, res, next) => {
     }
 });
 
-interface SubscribeData {
+export interface SubscribeData {
     email: string;
     region: string;
 }
 
 router.post('/subscribe', async (req, res, next) => {
     try {
-        const { data } = req.body as { data: SubscribeData };
+        const data: SubscribeData = req.body;
+        const isSubscribed = await Notifications.isSubscribed(
+            data.email,
+            data.region
+        );
+        if (isSubscribed) {
+            res.status(400).send('Already subscribed.');
+        }
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
             data.region
         );
+        if (env.NODE_ENV === 'test') {
+            //console.log(`Adding to subList: ${data.email}, ${data.region}`);
+            res.status(200).send(isUnsubscribed);
+            return;
+        }
         if (isUnsubscribed)
             Notifications.removeFromUnsubList(data.email, data.region);
         Notifications.addToSubList(data.email, data.region);
@@ -92,14 +107,25 @@ router.post('/subscribe', async (req, res, next) => {
 
 router.post('/unsubscribe', async (req, res, next) => {
     try {
-        const { data } = req.body as { data: SubscribeData };
+        const data: SubscribeData = req.body;
+        const isUnsubscribed = await Notifications.isUnsubscribed(
+            data.email,
+            data.region
+        );
+        if (isUnsubscribed) {
+            res.status(400).send('Already unsubscribed');
+        }
         const isSubscribed = await Notifications.isSubscribed(
             data.email,
             data.region
         );
-        if (isSubscribed) {
-            Notifications.removeFromSubList(data.email, data.region);
+        if (env.NODE_ENV === 'test') {
+            //console.log(`Adding to unsubList: ${data.email}, ${data.region}`);
+            res.status(200).send(isSubscribed);
+            return;
         }
+        if (isSubscribed)
+            Notifications.removeFromSubList(data.email, data.region);
         Notifications.addToUnsubList(data.email, data.region);
         res.status(200).send();
     } catch (e) {
