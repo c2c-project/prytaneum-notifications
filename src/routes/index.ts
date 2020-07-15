@@ -14,7 +14,7 @@ export interface InviteeData {
 }
 
 //TODO Change Notify to Invite
-export interface NotifyManyData {
+export interface InviteManyData {
     inviteeList: Array<InviteeData>;
     MoC: string;
     topic: string;
@@ -23,9 +23,9 @@ export interface NotifyManyData {
     region: string;
 }
 
-router.post('/notify-many', async (req, res, next) => {
+router.post('/invite-many', async (req, res, next) => {
     try {
-        const data: NotifyManyData = req.body;
+        const data: InviteManyData = req.body;
         const unsubList = await Notifications.getUnsubList(data.region);
         const filteredInviteeList = data.inviteeList.filter(
             (item: InviteeData) => {
@@ -39,7 +39,7 @@ router.post('/notify-many', async (req, res, next) => {
     }
 });
 
-export interface NotifyOneData {
+export interface InviteOneData {
     email: string;
     fName: string;
     lName: string;
@@ -50,14 +50,14 @@ export interface NotifyOneData {
     region: string;
 }
 
-router.post('/notify-one', async (req, res, next) => {
+router.post('/invite-one', async (req, res, next) => {
     try {
-        const data: NotifyOneData = req.body;
+        const data: InviteOneData = req.body;
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
             data.region
         );
-        if (isUnsubscribed) throw new Error('Cannot notify unsubscribed user');
+        if (isUnsubscribed) throw new Error('Cannot invite unsubscribed user');
         Email.inviteOne(
             data.email,
             data.fName,

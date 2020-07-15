@@ -2,8 +2,8 @@ import request, { Response } from 'supertest';
 import app from 'app';
 import {
     InviteeData,
-    NotifyManyData,
-    NotifyOneData,
+    InviteManyData,
+    InviteOneData,
     SubscribeData,
 } from './index';
 import Collections, { connect, close } from 'db';
@@ -17,14 +17,14 @@ afterAll(async () => {
 });
 
 describe('index', () => {
-    describe('#notify-many', () => {
+    describe('#invite-many', () => {
         it('should accept valid data', async () => {
             const validInvitee: InviteeData = {
                 email: 'fred@example.com',
                 fName: 'Fred',
                 lName: 'Flintstone',
             };
-            const validData: NotifyManyData = {
+            const validData: InviteManyData = {
                 inviteeList: [validInvitee],
                 MoC: 'Jack',
                 topic: 'Technology',
@@ -33,36 +33,18 @@ describe('index', () => {
                 region: 'west_coast',
             };
             const { status } = await request(app)
-                .post('/notify-many')
+                .post('/invite-many')
                 .send(validData);
             expect(status).toStrictEqual(200);
         });
         it('should reject no data', async () => {
-            const { status } = await request(app).post('/notify-many');
-            expect(status).toStrictEqual(500);
-        });
-        it('should reject missing field in data', async () => {
-            const validInvitee: InviteeData = {
-                email: 'fred@example.com',
-                fName: 'Fred',
-                lName: 'Flintstone',
-            };
-            const invalidData = {
-                inviteeList: [validInvitee],
-                MoC: 'Jack',
-                topic: 'Technology',
-                eventDateTime: 'July 31, 12:00 PM PST',
-                constituentScope: 'State',
-            };
-            const { status } = await request(app)
-                .post('/notify-many')
-                .send(invalidData);
+            const { status } = await request(app).post('/invite-many');
             expect(status).toStrictEqual(500);
         });
     });
-    describe('#notify-one', () => {
+    describe('#invite-one', () => {
         it('should accept valid data', async () => {
-            const validData: NotifyOneData = {
+            const validData: InviteOneData = {
                 email: 'fred@example.com',
                 fName: 'Fred',
                 lName: 'Flintstone',
@@ -73,12 +55,12 @@ describe('index', () => {
                 region: 'west_coast',
             };
             const { status } = await request(app)
-                .post('/notify-one')
+                .post('/invite-one')
                 .send(validData);
             expect(status).toStrictEqual(200);
         });
         it('should reject no data', async () => {
-            const { status } = await request(app).post('/notify-many');
+            const { status } = await request(app).post('/invite-one');
             expect(status).toStrictEqual(500);
         });
     });
