@@ -2,9 +2,9 @@
 
 ## Endpoints
 
-## notify-many
+## invite-many
 
-An `admin`, `moderator`, and `speaker` can uplaod a file which can be parsed into an array of objects containing the relevant information to send out a single notification to all contacts who are not unsubscribed.
+An `admin`, `moderator`, and `speaker` can uplaod a file which can be parsed into an array of objects containing the relevant information to send out a single invitation to all contacts who are not unsubscribed.
 
 ```mermaid
 sequenceDiagram
@@ -24,25 +24,9 @@ sequenceDiagram
   C->>U: Display Status of Response
 ```
 
-```typescript
-router.post('/notify-many', async (req, res, next) => {
-    try {
-        const { data } = req.body as { data?: Array<Object> };
-        const unsubList = await DB.getUnsubList();
-        const { filteredData } = data.filter((item) => {
-            return !unsubList.includes(item.email);
-        });
-        Email.notifyMany(filteredData);
-        res.status(200).send();
-    } catch (e) {
-        next(e);
-    }
-});
-```
+## invite-one
 
-## notify-one
-
-An `admin`, `moderator`, and `speaker` can send out a notification to a single contact who is not unsubscribed.
+An `admin`, `moderator`, and `speaker` can send out a invite to a single contact who is not unsubscribed.
 
 ```mermaid
 sequenceDiagram
@@ -60,22 +44,6 @@ sequenceDiagram
   ES-->>R: Notification
   NS->>C: Get Success/Error Response
   C->>U: Display Status of Response
-```
-
-```typescript
-router.post('/notify-one', async (req, res, next) => {
-    try {
-        const { data } = req.body as { data?: Object };
-        const unsubList = await DB.getUnsubList();
-        if unsubList.includes(data.email)
-          //Depends on how we plan to implement Subscriptions/Unsubscribing
-          throw new ClientError('Cannot notify unsubscribed user')
-        Email.notifyOne(data);
-        res.status(200).send();
-    } catch (e) {
-        next(e);
-    }
-});
 ```
 
 ## subscribe
@@ -96,22 +64,6 @@ sequenceDiagram
   C->>U: Display Status of Response
 ```
 
-```typescript
-router.post('/subscribe', async (req, res, next) => {
-    try {
-        const { data } = req.body as { data?: Object };
-        const unsubList = await DB.getUnsubList();
-        if unsubList.includes(data.email)
-          //Can simply take off of the unsub list to re-subscribe
-          DB.removeFromUnsubList(data.email)
-        DB.subscribeUser(data);
-        res.status(200).send();
-    } catch (e) {
-        next(e);
-    }
-});
-```
-
 ## unsubscribe (Embeded Info In Link)
 
 An `admin`, `moderator`, `speaker`, and `user` can unsubscribe to prevent getting any notifications sent to their email. This should be doable via a link embedded into each email.
@@ -128,18 +80,6 @@ sequenceDiagram
   DB->>NS: Response
   NS->>C: Get Success/Error Response
   C->>U: Display Status of Response
-```
-
-```typescript
-router.post('/unsubscribe', async (req, res, next) => {
-    try {
-        const { data } = req.body as { data?: Object };
-        DB.addToUnsubList(data.email);
-        res.status(200).send();
-    } catch (e) {
-        next(e);
-    }
-});
 ```
 
 ## Scheduled Jobs

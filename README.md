@@ -1,8 +1,60 @@
-# Notification Service
+# Notification-Service
 
-A service to handle notifications for Prytaneum.
+## High-Level
 
-## List of files to modify
+The notification-service manages the notifications that are sent out to potential and subscribed Prytaneum users.
 
-1. db/connect.ts
-2. docker-compose.yaml
+## API Endpoitns
+
+### /invite-many
+
+* Description: An `admin`, `moderator`, and `speaker` can send out an invite to a list of invitees via email while ensuring not to send them to unsubscribed users.
+
+* Request Body:
+
+```typescript
+{
+  inviteeList: [{email: 'test@example.com', fName: 'First', lName: 'Last' }];
+  MoC: 'Member of Congress',
+  topic: 'Town Hall Topic',
+  eventDateTime: 'July 31, 12:00 PM PST',
+  constituentScope: 'State',
+  region: 'example_coast',
+}
+```
+
+### /invite-one
+
+* An `admin`, `moderator`, and `speaker` can send out an invite to a single contact who is not unsubscribed.
+
+* Request Body:
+
+```typescript
+{
+  email: 'test@example.com',
+  fName: 'First',
+  lName: 'Last',
+  MoC: 'Member of Congress',
+  topic: 'Town Hall Topic',
+  eventDateTime: 'July 31, 12:00 PM PST',
+  constituentScope: 'State',
+  region: 'example_coast',
+}
+```
+
+### /accept-invite
+
+* An `admin`, `moderator`, `speaker`, and `user` can accept an invite
+
+### /subscribe & /unsubscribe
+
+* An `admin`, `moderator`, `speaker`, and `user` can subscribe/unsubscribe to get notifications sent to their email.
+
+* Request Body:
+
+```typescript
+{
+  email: 'test@example.com',
+  region: 'example_coast',
+}
+```
