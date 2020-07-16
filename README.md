@@ -8,9 +8,9 @@ The notification-service manages the notifications that are sent out to potentia
 
 ### /invite-many
 
-* Description: An `admin`, `moderator`, and `speaker` can send out an invite to a list of invitees via email while ensuring not to send them to unsubscribed users.
+-   Description: An `admin`, `moderator`, and `speaker` can send out an invite to a list of invitees via email while ensuring not to send them to unsubscribed users.
 
-* Request Body:
+-   Request Body:
 
 ```typescript
 {
@@ -25,9 +25,9 @@ The notification-service manages the notifications that are sent out to potentia
 
 ### /invite-one
 
-* An `admin`, `moderator`, and `speaker` can send out an invite to a single contact who is not unsubscribed.
+-   An `admin`, `moderator`, and `speaker` can send out an invite to a single contact who is not unsubscribed.
 
-* Request Body:
+-   Request Body:
 
 ```typescript
 {
@@ -42,15 +42,11 @@ The notification-service manages the notifications that are sent out to potentia
 }
 ```
 
-### /accept-invite
-
-* An `admin`, `moderator`, `speaker`, and `user` can accept an invite
-
 ### /subscribe & /unsubscribe
 
-* An `admin`, `moderator`, `speaker`, and `user` can subscribe/unsubscribe to get notifications sent to their email.
+-   An `admin`, `moderator`, `speaker`, and `user` can subscribe/unsubscribe to get notifications sent to their email.
 
-* Request Body:
+-   Request Body:
 
 ```typescript
 {
