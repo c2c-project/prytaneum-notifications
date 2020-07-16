@@ -1,7 +1,7 @@
 import express from 'express';
 
 import Notifications from '../lib/notifications';
-import Email from '../lib/email';
+import Email from '../lib/emails/email';
 
 import env from '../config/env';
 
@@ -13,7 +13,6 @@ export interface InviteeData {
     lName: string;
 }
 
-//TODO Change Notify to Invite
 export interface InviteManyData {
     inviteeList: Array<InviteeData>;
     MoC: string;
@@ -32,7 +31,13 @@ router.post('/invite-many', async (req, res, next) => {
                 return !unsubList.includes(item.email);
             }
         );
-        Email.inviteMany(filteredInviteeList);
+        Email.inviteMany(
+            filteredInviteeList,
+            data.MoC,
+            data.topic,
+            data.eventDateTime,
+            data.constituentScope
+        );
         res.status(200).send();
     } catch (e) {
         next(e);
@@ -58,7 +63,7 @@ router.post('/invite-one', async (req, res, next) => {
             data.region
         );
         if (isUnsubscribed) throw new Error('Cannot invite unsubscribed user');
-        Email.inviteOne(
+        const result = await Email.inviteOne(
             data.email,
             data.fName,
             data.MoC,
@@ -66,11 +71,25 @@ router.post('/invite-one', async (req, res, next) => {
             data.eventDateTime,
             data.constituentScope
         );
+        console.log(result);
         res.status(200).send();
     } catch (e) {
+        console.log(e);
         next(e);
     }
 });
+
+// export interface NotifyManyData {
+
+// }
+
+// router.post('/notify-many', async (req, res, next) => {
+//     try {
+//         res.status(200).send();
+//     } catch (e) {
+//         next(e);
+//     }
+// });
 
 export interface SubscribeData {
     email: string;
