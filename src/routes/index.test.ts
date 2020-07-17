@@ -1,6 +1,5 @@
 import request from 'supertest';
 import { v5 as uuidv5 } from 'uuid';
-import isISODate from 'is-iso-date';
 import app from 'app';
 import {
     InviteeData,
@@ -80,7 +79,8 @@ describe('index', () => {
                 .post('/invite-many')
                 .send(validData);
             expect(status).toStrictEqual(200);
-            expect(isISODate(text)).toBeTruthy();
+            const deliveryTimeParsed = Date.parse(text);
+            expect(isNaN(deliveryTimeParsed)).toBeFalsy();
         });
         it('should reject invalid deliveryTime', async () => {
             const validData: InviteManyData = {
@@ -153,7 +153,8 @@ describe('index', () => {
                 .post('/invite-one')
                 .send(validData);
             expect(status).toStrictEqual(200);
-            expect(isISODate(text)).toBeTruthy();
+            const deliveryTimeParsed = Date.parse(text);
+            expect(isNaN(deliveryTimeParsed)).toBeFalsy();
         });
         it('should reject invalid deliveryTime', async () => {
             const validData: InviteOneData = {

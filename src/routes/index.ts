@@ -1,6 +1,6 @@
 import express from 'express';
 import { v5 as uuidv5 } from 'uuid';
-import isISODate from 'is-iso-date';
+//import isISODate from 'is-iso-date';
 
 import Notifications from '../lib/notifications';
 import Email from '../lib/emails/email';
@@ -44,7 +44,10 @@ router.post('/invite-many', async (req, res, next) => {
                 res.status(200).send(data.deliveryTime);
                 return;
             }
-        } else if (!isISODate(data.deliveryTime)) {
+        }
+        //Check if the ISO format is valid by parsing string, returns NaN if invalid
+        const deliveryTimeParsed = Date.parse(data.deliveryTime);
+        if (isNaN(deliveryTimeParsed)) {
             throw new ClientError('Invalid ISO Date format');
             //Check that date is not in the past
         } else if (new Date(data.deliveryTime).getTime() - Date.now() < 0) {
@@ -93,7 +96,9 @@ router.post('/invite-one', async (req, res, next) => {
                 res.status(200).send(data.deliveryTime);
                 return;
             }
-        } else if (!isISODate(data.deliveryTime)) {
+        }
+        const deliveryTimeParsed: number = Date.parse(data.deliveryTime);
+        if (isNaN(deliveryTimeParsed)) {
             throw new ClientError('Invalid ISO Date format');
             //Check that date is not in the past
         } else if (new Date(data.deliveryTime).getTime() - Date.now() < 0) {

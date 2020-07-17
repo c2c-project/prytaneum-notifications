@@ -3855,11 +3855,6 @@ is-installed-globally@^0.3.1:
     global-dirs "^2.0.1"
     is-path-inside "^3.0.1"
 
-is-iso-date@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/is-iso-date/-/is-iso-date-0.0.1.tgz#d1727b0a4f40cf4dd0dbf95a56a58cc991bb76e2"
-  integrity sha1-0XJ7Ck9Az03Q2/laVqWMyZG7duI=
-
 is-npm@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/is-npm/-/is-npm-4.0.0.tgz#c90dd8380696df87a7a6d823c20d0b12bbe3c84d"
