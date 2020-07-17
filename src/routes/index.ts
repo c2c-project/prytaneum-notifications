@@ -138,6 +138,9 @@ export interface SubscribeData {
 router.post('/subscribe', async (req, res, next) => {
     try {
         const data: SubscribeData = req.body;
+        if (data.email === undefined || data.region === undefined) {
+            throw new ClientError('Invalid Data');
+        }
         const isSubscribed = await Notifications.isSubscribed(
             data.email,
             data.region
@@ -166,9 +169,13 @@ router.post('/subscribe', async (req, res, next) => {
     }
 });
 
+//TODO Update to use the uuid instead of email
 router.post('/unsubscribe', async (req, res, next) => {
     try {
         const data: SubscribeData = req.body;
+        if (data.email === undefined || data.region === undefined) {
+            throw new ClientError('Invalid Data');
+        }
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
             data.region

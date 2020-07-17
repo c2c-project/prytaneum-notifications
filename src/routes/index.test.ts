@@ -208,9 +208,29 @@ describe('index', () => {
                 .send(validData);
             expect(status).toStrictEqual(200);
         });
+        it('should reject invalid email', async () => {
+            const invalidData = {
+                email: undefined,
+                region: 'test',
+            };
+            const { status } = await request(app)
+                .post('/subscribe')
+                .send(invalidData);
+            expect(status).toStrictEqual(400);
+        });
+        it('should reject invalid region', async () => {
+            const invalidData = {
+                email: 'subscriber@example.com',
+                region: undefined,
+            };
+            const { status } = await request(app)
+                .post('/subscribe')
+                .send(invalidData);
+            expect(status).toStrictEqual(400);
+        });
         it('should reject no data', async () => {
             const { status } = await request(app).post('/subscribe');
-            expect(status).toStrictEqual(500);
+            expect(status).toStrictEqual(400);
         });
     });
     describe('#unsubscribe', () => {
@@ -245,9 +265,29 @@ describe('index', () => {
             expect(text).toStrictEqual('true');
             expect(status).toStrictEqual(200);
         });
+        it('should reject invalid email', async () => {
+            const invalidData = {
+                email: undefined,
+                region: 'test',
+            };
+            const { status } = await request(app)
+                .post('/unsubscribe')
+                .send(invalidData);
+            expect(status).toStrictEqual(400);
+        });
+        it('should reject invalid region', async () => {
+            const invalidData = {
+                email: 'subscriber@example.com',
+                region: undefined,
+            };
+            const { status } = await request(app)
+                .post('/unsubscribe')
+                .send(invalidData);
+            expect(status).toStrictEqual(400);
+        });
         it('should reject no data', async () => {
             const { status } = await request(app).post('/unsubscribe');
-            expect(status).toStrictEqual(500);
+            expect(status).toStrictEqual(400);
         });
     });
 });
