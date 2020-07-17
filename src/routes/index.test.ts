@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { v5 as uuidv5 } from 'uuid';
+import isISODate from 'is-iso-date';
 import app from 'app';
 import {
     InviteeData,
@@ -30,12 +31,12 @@ afterAll(async () => {
 
 describe('index', () => {
     describe('#invite-many', () => {
+        const validInvitee: InviteeData = {
+            email: 'delia.zieme@ethereal.email',
+            fName: 'Delia',
+            lName: 'Zieme',
+        };
         it('should accept valid data', async () => {
-            const validInvitee: InviteeData = {
-                email: 'delia.zieme@ethereal.email',
-                fName: 'Delia',
-                lName: 'Zieme',
-            };
             const validData: InviteManyData = {
                 inviteeList: [validInvitee],
                 MoC: 'Jack',
@@ -48,6 +49,53 @@ describe('index', () => {
                 .post('/invite-many')
                 .send(validData);
             expect(status).toStrictEqual(200);
+        });
+        it('should accept valid deliveryTime', async () => {
+            const validDeliveryTime = new Date(Date.now() + 1000);
+            const validData: InviteManyData = {
+                inviteeList: [validInvitee],
+                MoC: 'Jack',
+                topic: 'Technology',
+                eventDateTime: 'July 31, 12:00 PM PST',
+                constituentScope: 'State',
+                region: 'west_coast',
+                deliveryTime: validDeliveryTime.toISOString(),
+            };
+            const { status } = await request(app)
+                .post('/invite-many')
+                .send(validData);
+            expect(status).toStrictEqual(200);
+        });
+        it('should accept undefined deliveryTime & replace with valid deliveryTime', async () => {
+            const validData: InviteManyData = {
+                inviteeList: [validInvitee],
+                MoC: 'Jack',
+                topic: 'Technology',
+                eventDateTime: 'July 31, 12:00 PM PST',
+                constituentScope: 'State',
+                region: 'west_coast',
+                deliveryTime: undefined,
+            };
+            const { status, text } = await request(app)
+                .post('/invite-many')
+                .send(validData);
+            expect(status).toStrictEqual(200);
+            expect(isISODate(text)).toBeTruthy();
+        });
+        it('should reject invalid deliveryTime', async () => {
+            const validData: InviteManyData = {
+                inviteeList: [validInvitee],
+                MoC: 'Jack',
+                topic: 'Technology',
+                eventDateTime: 'July 31, 12:00 PM PST',
+                constituentScope: 'State',
+                region: 'west_coast',
+                deliveryTime: 'invalid',
+            };
+            const { status } = await request(app)
+                .post('/invite-many')
+                .send(validData);
+            expect(status).toStrictEqual(400);
         });
         it('should reject no data', async () => {
             const { status } = await request(app).post('/invite-many');
@@ -70,6 +118,59 @@ describe('index', () => {
                 .post('/invite-one')
                 .send(validData);
             expect(status).toStrictEqual(200);
+        });
+        it('should accept a valid deliveryTime', async () => {
+            const validDeliveryTime: Date = new Date(Date.now() + 1000);
+            const validData: InviteOneData = {
+                email: 'delia.zieme@ethereal.email',
+                fName: 'Delia',
+                lName: 'Zieme',
+                MoC: 'Jack',
+                topic: 'Technology',
+                eventDateTime: 'July 31, 12:00 PM PST',
+                constituentScope: 'State',
+                region: 'west_coast',
+                deliveryTime: validDeliveryTime.toISOString(),
+            };
+            const { status } = await request(app)
+                .post('/invite-one')
+                .send(validData);
+            expect(status).toStrictEqual(200);
+        });
+        it('should accept undefined deliveryTime & replace with valid deliveryTime', async () => {
+            const validData: InviteOneData = {
+                email: 'delia.zieme@ethereal.email',
+                fName: 'Delia',
+                lName: 'Zieme',
+                MoC: 'Jack',
+                topic: 'Technology',
+                eventDateTime: 'July 31, 12:00 PM PST',
+                constituentScope: 'State',
+                region: 'west_coast',
+                deliveryTime: undefined,
+            };
+            const { status, text } = await request(app)
+                .post('/invite-one')
+                .send(validData);
+            expect(status).toStrictEqual(200);
+            expect(isISODate(text)).toBeTruthy();
+        });
+        it('should reject invalid deliveryTime', async () => {
+            const validData: InviteOneData = {
+                email: 'delia.zieme@ethereal.email',
+                fName: 'Delia',
+                lName: 'Zieme',
+                MoC: 'Jack',
+                topic: 'Technology',
+                eventDateTime: 'July 31, 12:00 PM PST',
+                constituentScope: 'State',
+                region: 'west_coast',
+                deliveryTime: 'invalid',
+            };
+            const { status } = await request(app)
+                .post('/invite-one')
+                .send(validData);
+            expect(status).toStrictEqual(400);
         });
         it('should reject no data', async () => {
             const { status } = await request(app).post('/invite-one');
@@ -138,7 +239,6 @@ describe('index', () => {
                 email: 'subscribed@example.com',
                 region: 'test',
             };
-            console.log(uuidv5('subscribed@example.com', uuidv5.DNS));
             const { status, text } = await request(app)
                 .post('/unsubscribe')
                 .send(validData);

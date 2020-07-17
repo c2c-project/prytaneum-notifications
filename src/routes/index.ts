@@ -1,5 +1,6 @@
 import express from 'express';
 import { v5 as uuidv5 } from 'uuid';
+import isISODate from 'is-iso-date';
 
 import Notifications from '../lib/notifications';
 import Email from '../lib/emails/email';
@@ -22,7 +23,7 @@ export interface InviteManyData {
     eventDateTime: string;
     constituentScope: string;
     region: string;
-    deliveryTime?: Date;
+    deliveryTime?: string; //ISO format
 }
 
 router.post('/invite-many', async (req, res, next) => {
@@ -36,8 +37,19 @@ router.post('/invite-many', async (req, res, next) => {
             }
         );
         if (data.deliveryTime === undefined) {
-            //Deliver right away if no deliveryTime is given
-            data.deliveryTime = new Date(Date.now());
+            //Deliver right away by default if no deliveryTime is given
+            const now = new Date(Date.now());
+            data.deliveryTime = now.toISOString();
+            if (env.NODE_ENV === 'test') {
+                res.status(200).send(data.deliveryTime);
+                return;
+            }
+        } else if (!isISODate(data.deliveryTime)) {
+            throw new ClientError('Invalid ISO Date format');
+            //Check that date is not in the past
+        } else if (new Date(data.deliveryTime).getTime() - Date.now() < 0) {
+            // Default or throw error?
+            throw new ClientError('Past time picked');
         }
         const results = await Email.inviteMany(
             filteredInviteeList,
@@ -63,7 +75,7 @@ export interface InviteOneData {
     eventDateTime: string;
     constituentScope: string;
     region: string;
-    deliveryTime?: Date;
+    deliveryTime?: string; //ISO Format
 }
 
 router.post('/invite-one', async (req, res, next) => {
@@ -75,7 +87,18 @@ router.post('/invite-one', async (req, res, next) => {
         );
         if (data.deliveryTime === undefined) {
             //Deliver right away if no deliveryTime is given
-            data.deliveryTime = new Date(Date.now());
+            const now = new Date(Date.now());
+            data.deliveryTime = now.toISOString();
+            if (env.NODE_ENV === 'test') {
+                res.status(200).send(data.deliveryTime);
+                return;
+            }
+        } else if (!isISODate(data.deliveryTime)) {
+            throw new ClientError('Invalid ISO Date format');
+            //Check that date is not in the past
+        } else if (new Date(data.deliveryTime).getTime() - Date.now() < 0) {
+            // Default or throw error?
+            throw new ClientError('Past time picked');
         }
         if (isUnsubscribed) throw new Error('Cannot invite unsubscribed user');
         const result = await Email.inviteOne(

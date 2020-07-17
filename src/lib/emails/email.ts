@@ -107,10 +107,7 @@ const sendEmail = async (
     text: string
 ): Promise<any> => {
     // in development mode, don't send an email, instead we will test this on the staging server
-    if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
-        //console.log(`To: ${to}: \n${text}`);
-        console.log('Email Sent');
-        //return new Promise((resolve) => resolve('success'));
+    if (env.NODE_ENV === 'development') {
         const data: mailgun.messages.SendData = {
             to,
             from: `Prytaneum <${env.MAILGUN_FROM_EMAIL}>`,
@@ -119,6 +116,9 @@ const sendEmail = async (
             'o:testmode': 'true',
         };
         return await mg.messages().send(data);
+    } else if (env.NODE_ENV === 'test') {
+        console.log(`To: ${to}: \n${text}`);
+        return new Promise((resolve) => resolve('success'));
     } else {
         const data: mailgun.messages.SendData = {
             to,
@@ -138,7 +138,7 @@ const sendEmail = async (
  * @param {string} topic Topic for the Town Hall
  * @param {string} eventDateTime The event date and time
  * @param {string} constituentScope the constituent scope
- * @param {Date} deliveryTime the date & time that the email should be sent out
+ * @param {string} deliveryTime the date & time that the email should be sent out in ISO format
  * @return {Promise<any>} promise that resolves to the mailgun email results
  */
 const inviteMany = async (
@@ -147,8 +147,9 @@ const inviteMany = async (
     topic: string,
     eventDateTime: string,
     constituentScope: string,
-    delivertyTime: Date
+    deliveryTime: string
 ): Promise<any> => {
+    const deliveryTimeDate = new Date(deliveryTime);
     return new Promise((resolve) => {
         setTimeout(async () => {
             let invitee: InviteeData;
@@ -168,7 +169,7 @@ const inviteMany = async (
                 results.push(result);
             }
             resolve(results);
-        }, delivertyTime.getTime() - Date.now());
+        }, deliveryTimeDate.getTime() - Date.now());
     });
 };
 
@@ -180,7 +181,7 @@ const inviteMany = async (
  * @param {string} topic Topic for the Town Hall
  * @param {string} eventDateTime The event date and time
  * @param {string} constituentScope the constituent scope
- * @param {Date} deliveryTime the date & time that the email should be sent out
+ * @param {string} deliveryTime the date & time that the email should be sent out in ISO format
  * @return {Promise<any>} promise that resolves to the mailgun email results
  */
 const inviteOne = async (
@@ -190,8 +191,9 @@ const inviteOne = async (
     topic: string,
     eventDateTime: string,
     constituentScope: string,
-    delivertyTime: Date
+    deliveryTime: string
 ): Promise<any> => {
+    const deliveryTimeDate = new Date(deliveryTime);
     return new Promise((resolve) => {
         setTimeout(async () => {
             const registrationLink = generateInviteLink(email);
@@ -205,7 +207,7 @@ const inviteOne = async (
             const subject = 'Prytaneum Town Hall Invite';
             const result = await sendEmail(email, subject, inviteString);
             resolve(result);
-        }, delivertyTime.getTime() - Date.now());
+        }, deliveryTimeDate.getTime() - Date.now());
     });
 };
 
@@ -228,3 +230,41 @@ export default {
     mailgunUnsubscribe,
     mailgunDeleteFromUnsubList,
 };
+
+// /**
+//  * @description internal function to use mg api to send email
+//  * @param {string} to email adress being sent to
+//  * @returns {Promise}
+//  */
+// const sendEmail = async (
+//     to: string,
+//     subject: string,
+//     text: string
+// ): Promise<any> => {
+//     // in development mode, don't send an email, instead we will test this on the staging server
+//     if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
+//         //console.log(`To: ${to}: \n${text}`);
+//         console.log('Email Sent');
+//         //return new Promise((resolve) => resolve('success'));
+//     }
+//     const mailOptions: Mail.Options = {
+//         to,
+//         from: `Prytaneum <${env.GMAIL_USER}>`,
+//         subject,
+//         text,
+//     };
+//     const transporter: Mail = nodemailer.createTransport({
+//         service: 'gmail',
+//         secure: true,
+//         auth: {
+//             type: 'OAuth2',
+//             user: env.GMAIL_USER,
+//             clientId: env.GMAIL_ID,
+//             clientSecret: env.GMAIL_SECRET,
+//             refreshToken: env.GMAIL_REFRESH_TOKEN,
+//             accessToken: env.GMAIL_ACCESS_TOKEN,
+//         },
+//     });
+//     const info = await transporter.sendMail(mailOptions);
+//     return info;
+// };
