@@ -1,9 +1,11 @@
 import express from 'express';
+import { v5 as uuidv5 } from 'uuid';
 
 import Notifications from '../lib/notifications';
 import Email from '../lib/emails/email';
 
 import env from '../config/env';
+import { ClientError } from 'lib/errors';
 
 const router = express.Router();
 
@@ -20,6 +22,7 @@ export interface InviteManyData {
     eventDateTime: string;
     constituentScope: string;
     region: string;
+    deliveryTime?: Date;
 }
 
 router.post('/invite-many', async (req, res, next) => {
@@ -28,16 +31,23 @@ router.post('/invite-many', async (req, res, next) => {
         const unsubList = await Notifications.getUnsubList(data.region);
         const filteredInviteeList = data.inviteeList.filter(
             (item: InviteeData) => {
-                return !unsubList.includes(item.email);
+                const emailHash = uuidv5(item.email, uuidv5.URL);
+                return !unsubList.includes(emailHash);
             }
         );
-        Email.inviteMany(
+        if (data.deliveryTime === undefined) {
+            //Deliver right away if no deliveryTime is given
+            data.deliveryTime = new Date(Date.now());
+        }
+        const results = await Email.inviteMany(
             filteredInviteeList,
             data.MoC,
             data.topic,
             data.eventDateTime,
-            data.constituentScope
+            data.constituentScope,
+            data.deliveryTime
         );
+        console.log(results);
         res.status(200).send();
     } catch (e) {
         next(e);
@@ -53,6 +63,7 @@ export interface InviteOneData {
     eventDateTime: string;
     constituentScope: string;
     region: string;
+    deliveryTime?: Date;
 }
 
 router.post('/invite-one', async (req, res, next) => {
@@ -62,6 +73,10 @@ router.post('/invite-one', async (req, res, next) => {
             data.email,
             data.region
         );
+        if (data.deliveryTime === undefined) {
+            //Deliver right away if no deliveryTime is given
+            data.deliveryTime = new Date(Date.now());
+        }
         if (isUnsubscribed) throw new Error('Cannot invite unsubscribed user');
         const result = await Email.inviteOne(
             data.email,
@@ -69,19 +84,20 @@ router.post('/invite-one', async (req, res, next) => {
             data.MoC,
             data.topic,
             data.eventDateTime,
-            data.constituentScope
+            data.constituentScope,
+            data.deliveryTime
         );
         console.log(result);
         res.status(200).send();
     } catch (e) {
-        console.log(e);
         next(e);
     }
 });
 
-// export interface NotifyManyData {
-
-// }
+export interface NotifyManyData {
+    townhallID: string;
+    notificationDate: Date;
+}
 
 // router.post('/notify-many', async (req, res, next) => {
 //     try {
@@ -104,7 +120,7 @@ router.post('/subscribe', async (req, res, next) => {
             data.region
         );
         if (isSubscribed) {
-            res.status(400).send('Already subscribed.');
+            throw new ClientError('Already subscribed.');
         }
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
@@ -115,8 +131,11 @@ router.post('/subscribe', async (req, res, next) => {
             res.status(200).send(isUnsubscribed);
             return;
         }
-        if (isUnsubscribed)
+        if (isUnsubscribed) {
             Notifications.removeFromUnsubList(data.email, data.region);
+            Email.mailgunDeleteFromUnsubList(data.email);
+        }
+        //Remove from mailgun unsub list
         Notifications.addToSubList(data.email, data.region);
         res.status(200).send();
     } catch (e) {
@@ -132,7 +151,7 @@ router.post('/unsubscribe', async (req, res, next) => {
             data.region
         );
         if (isUnsubscribed) {
-            res.status(400).send('Already unsubscribed');
+            throw new ClientError('Already unsubscribed');
         }
         const isSubscribed = await Notifications.isSubscribed(
             data.email,
@@ -146,6 +165,8 @@ router.post('/unsubscribe', async (req, res, next) => {
         if (isSubscribed)
             Notifications.removeFromSubList(data.email, data.region);
         Notifications.addToUnsubList(data.email, data.region);
+        Email.mailgunUnsubscribe(data.email);
+        //Add to mailgun unsub list as well
         res.status(200).send();
     } catch (e) {
         next(e);

@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { v5 as uuidv5 } from 'uuid';
 import app from 'app';
 import {
     InviteeData,
@@ -12,8 +13,8 @@ import { ObjectId } from 'mongodb';
 const _id: ObjectId = new ObjectId();
 const testDoc: NotificationDoc = {
     _id,
-    unsubscribeList: ['unsubscribed@example.com'],
-    subscribeList: ['subscribed@example.com'],
+    unsubscribeList: [uuidv5('unsubscribed@example.com', uuidv5.URL)],
+    subscribeList: [uuidv5('subscribed@example.com', uuidv5.URL)],
     region: 'test',
 };
 
@@ -31,9 +32,9 @@ describe('index', () => {
     describe('#invite-many', () => {
         it('should accept valid data', async () => {
             const validInvitee: InviteeData = {
-                email: 'fred@example.com',
-                fName: 'Fred',
-                lName: 'Flintstone',
+                email: 'delia.zieme@ethereal.email',
+                fName: 'Delia',
+                lName: 'Zieme',
             };
             const validData: InviteManyData = {
                 inviteeList: [validInvitee],
@@ -56,9 +57,9 @@ describe('index', () => {
     describe('#invite-one', () => {
         it('should accept valid data', async () => {
             const validData: InviteOneData = {
-                email: 'fred@example.com',
-                fName: 'Fred',
-                lName: 'Flintstone',
+                email: 'delia.zieme@ethereal.email',
+                fName: 'Delia',
+                lName: 'Zieme',
                 MoC: 'Jack',
                 topic: 'Technology',
                 eventDateTime: 'July 31, 12:00 PM PST',
@@ -101,11 +102,10 @@ describe('index', () => {
                 email: 'unsubscribed@example.com',
                 region: 'test',
             };
-            const { status, text } = await request(app)
+            const { status } = await request(app)
                 .post('/subscribe')
                 .send(validData);
             expect(status).toStrictEqual(200);
-            expect(text).toStrictEqual('true');
         });
         it('should reject no data', async () => {
             const { status } = await request(app).post('/subscribe');
@@ -138,6 +138,7 @@ describe('index', () => {
                 email: 'subscribed@example.com',
                 region: 'test',
             };
+            console.log(uuidv5('subscribed@example.com', uuidv5.DNS));
             const { status, text } = await request(app)
                 .post('/unsubscribe')
                 .send(validData);
