@@ -20,6 +20,7 @@ The notification-service manages the notifications that are sent out to potentia
   eventDateTime: 'July 31, 12:00 PM PST',
   constituentScope: 'State',
   region: 'example_coast',
+  deliveryTime: new Date('YYY-MM-DDTHH:MM:SS'),
 }
 ```
 
@@ -39,7 +40,9 @@ The notification-service manages the notifications that are sent out to potentia
   eventDateTime: 'July 31, 12:00 PM PST',
   constituentScope: 'State',
   region: 'example_coast',
+  deliveryTime: new Date('YYY-MM-DDTHH:MM:SS'),
 }
+
 ```
 
 ### /subscribe & /unsubscribe
