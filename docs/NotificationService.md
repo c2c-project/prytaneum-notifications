@@ -84,32 +84,27 @@ sequenceDiagram
 
 ## Scheduled Jobs
 
-## Reminders/Notifications (Check every x time interval)
+## Reminders/Notifications (Using RabbitMQ)
 
 ```mermaid
 sequenceDiagram
+  participant C as Client
+  participant RMQ as Rabbit MQ
   participant NS as Notification Service
   participant DB as Database
   participant ES as Email Service
   participant R as Recipiant
   participant LS as Logging Service
-  NS-->>DB: Request Sub & Unsub Lists
+  C-->>RMQ: Event w/ notification created
+  NS-->>RMQ: Pulse to check for new Notification Jobs
+  RMQ-->>NS: Consume the Notification Jobs
+  NS->>RMQ: Acknowledge Job Data Received
+  NS-->>DB: Request relevant Sub List
   DB->>NS: Response
   NS-->>ES: Queue notifications for subscribers
   ES-->>R: Notification
   ES->>NS: Response
   NS-->>LS: Log Output
-```
-
-```typescript
-const schedule = require('node-schedule');
-//Run every 10 mins
-const notificationJob = schedule.scheduleJob('*/10 * * * *', () => {
-    //Fetch list of notifications that are within set time period
-    //Fetch Unsubscribe list (perhaps can be cached if not updated)
-    //Queue upcoming notifications for people who are subscribed
-    //Log the results
-});
 ```
 
 ## Permissions
