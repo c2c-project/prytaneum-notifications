@@ -1,5 +1,6 @@
 import app from 'app';
 import { connect } from 'db';
+import Rabbitmq from 'lib/rabbitmq';
 import env from 'config/env';
 
 async function makeServer() {
@@ -10,6 +11,8 @@ async function makeServer() {
         */
 		await connect();
 		app.listen(Number(env.PORT), env.ORIGIN);
+		//TODO Fix so that rabbitmq connection not dependent on makeServer
+		await Rabbitmq.connect();
 	} catch (e) {
 		// eslint-disable-next-line no-console
 		console.error(e);

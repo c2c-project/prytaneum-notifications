@@ -1,14 +1,26 @@
 import express from 'express';
 import { v5 as uuidv5 } from 'uuid';
-//import isISODate from 'is-iso-date';
+import fs from 'fs';
 
 import Notifications from '../lib/notifications';
-import Email from '../lib/emails/email';
+import Invite from '../modules/invite';
+import Subscribe from '../modules/subscribe';
+import notificationConsumer from '../lib/jobs/notifications';
 
 import env from '../config/env';
 import { ClientError } from 'lib/errors';
 
 const router = express.Router();
+
+router.post('/test', async (req, res, next) => {
+    try {
+        await notificationConsumer();
+        res.status(200).send();
+    } catch (e) {
+        console.error(e);
+        next(e);
+    }
+});
 
 export interface InviteeData {
     email: string;
@@ -32,10 +44,12 @@ router.post('/invite-many', async (req, res, next) => {
         const unsubList = await Notifications.getUnsubList(data.region);
         const filteredInviteeList = data.inviteeList.filter(
             (item: InviteeData) => {
-                const emailHash = uuidv5(item.email, uuidv5.URL);
-                return !unsubList.includes(emailHash);
+                //const emailHash = uuidv5(item.email, uuidv5.URL);
+                return !unsubList.includes(item.email);
             }
         );
+        if (filteredInviteeList.length === 0)
+            throw new ClientError('All invitees are unsubscribed');
         if (data.deliveryTime === undefined) {
             //Deliver right away by default if no deliveryTime is given
             const now = new Date(Date.now());
@@ -46,25 +60,20 @@ router.post('/invite-many', async (req, res, next) => {
             }
         }
         //Check if the ISO format is valid by parsing string, returns NaN if invalid
-        const deliveryTimeParsed = Date.parse(data.deliveryTime);
-        if (isNaN(deliveryTimeParsed)) {
+        if (isNaN(Date.parse(data.deliveryTime)))
             throw new ClientError('Invalid ISO Date format');
-            //Check that date is not in the past
-        } else if (new Date(data.deliveryTime).getTime() - Date.now() < 0) {
-            // Default or throw error?
-            throw new ClientError('Past time picked');
-        }
-        const results = await Email.inviteMany(
+        const results = await Invite.inviteMany(
             filteredInviteeList,
             data.MoC,
             data.topic,
             data.eventDateTime,
             data.constituentScope,
-            data.deliveryTime
+            new Date(data.deliveryTime)
         );
         console.log(results);
         res.status(200).send();
     } catch (e) {
+        if (env.NODE_ENV === 'development') console.error(e);
         next(e);
     }
 });
@@ -88,6 +97,8 @@ router.post('/invite-one', async (req, res, next) => {
             data.email,
             data.region
         );
+        if (isUnsubscribed)
+            throw new ClientError('Cannot invite unsubscribed user');
         if (data.deliveryTime === undefined) {
             //Deliver right away if no deliveryTime is given
             const now = new Date(Date.now());
@@ -97,27 +108,21 @@ router.post('/invite-one', async (req, res, next) => {
                 return;
             }
         }
-        const deliveryTimeParsed: number = Date.parse(data.deliveryTime);
-        if (isNaN(deliveryTimeParsed)) {
+        if (isNaN(Date.parse(data.deliveryTime)))
             throw new ClientError('Invalid ISO Date format');
-            //Check that date is not in the past
-        } else if (new Date(data.deliveryTime).getTime() - Date.now() < 0) {
-            // Default or throw error?
-            throw new ClientError('Past time picked');
-        }
-        if (isUnsubscribed) throw new Error('Cannot invite unsubscribed user');
-        const result = await Email.inviteOne(
+        const result = await Invite.inviteOne(
             data.email,
             data.fName,
             data.MoC,
             data.topic,
             data.eventDateTime,
             data.constituentScope,
-            data.deliveryTime
+            new Date(data.deliveryTime)
         );
         console.log(result);
         res.status(200).send();
     } catch (e) {
+        if (env.NODE_ENV === 'development') console.error(e);
         next(e);
     }
 });
@@ -164,12 +169,13 @@ router.post('/subscribe', async (req, res, next) => {
         }
         if (isUnsubscribed) {
             Notifications.removeFromUnsubList(data.email, data.region);
-            Email.mailgunDeleteFromUnsubList(data.email);
+            Subscribe.mailgunDeleteFromUnsubList(data.email);
         }
         //Remove from mailgun unsub list
         Notifications.addToSubList(data.email, data.region);
         res.status(200).send();
     } catch (e) {
+        if (env.NODE_ENV === 'development') console.error(e);
         next(e);
     }
 });
@@ -200,10 +206,11 @@ router.post('/unsubscribe', async (req, res, next) => {
         if (isSubscribed)
             Notifications.removeFromSubList(data.email, data.region);
         Notifications.addToUnsubList(data.email, data.region);
-        Email.mailgunUnsubscribe(data.email);
+        Subscribe.mailgunUnsubscribe(data.email);
         //Add to mailgun unsub list as well
         res.status(200).send();
     } catch (e) {
+        if (env.NODE_ENV === 'development') console.error(e);
         next(e);
     }
 });
