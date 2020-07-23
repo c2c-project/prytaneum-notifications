@@ -14,7 +14,7 @@ const _id: ObjectId = new ObjectId();
 const testDoc: NotificationDoc = {
     _id,
     unsubscribeList: [uuidv5('unsubscribed@example.com', uuidv5.URL)],
-    subscribeList: [uuidv5('subscribed@example.com', uuidv5.URL)],
+    subscribeList: ['subscribed@example.com'],
     region: 'test',
 };
 
