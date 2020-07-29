@@ -1,5 +1,4 @@
 import request from 'supertest';
-import { v5 as uuidv5 } from 'uuid';
 import app from 'app';
 import {
     InviteeData,

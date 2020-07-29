@@ -1,5 +1,4 @@
 import Email from '../lib/emails/email';
-import { v5 as uuidv5 } from 'uuid';
 
 /**
  * @description Send out email notificaions from the subList
@@ -7,19 +6,26 @@ import { v5 as uuidv5 } from 'uuid';
  * @param {Date} deliveryTime Time that the email will be delivered
  */
 const notifyMany = async (subList: Array<string>, deliveryTime: Date) => {
-	try {
-		let results: Array<string> = [];
-		//TODO Fix the async problem
-		subList.forEach(async (email) => {
-			const result = await Email.sendEmail(email, 'Prytaneum Notification', 'Test Notification', deliveryTime);
-			console.log(result);
-			results.push('test');
-		});
-		results.push('test');
-		return results;
-	} catch (e) {
-		console.error(e);
-	}
+    try {
+        if (subList.length === 0) {
+            throw new Error('Empty subscribe list');
+        }
+        let results: Array<string> = [];
+        //TODO Fix the async problem
+        for (let i = 0; i < subList.length; i++) {
+            const email = subList[i];
+            const result = await Email.sendEmail(
+                email,
+                'Prytaneum Notification',
+                'Test Notification',
+                deliveryTime
+            );
+            results.push(result);
+        }
+        return results;
+    } catch (e) {
+        console.error(e);
+    }
 };
 
 export default { notifyMany };
