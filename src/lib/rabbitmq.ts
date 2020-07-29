@@ -1,22 +1,18 @@
 import amqp from 'amqplib';
-import { ClientError } from './errors';
 import env from '../config/env';
 
-let connection: amqp.Connection;
-let channel: amqp.Channel;
+let connection: amqp.Connection | null = null;
+let channel: amqp.Channel | null = null;
 
+/**
+ * @description creates a connection and channel for rabbitmq
+ */
 const connect = async (): Promise<void> => {
     try {
         connection = await amqp.connect(env.AMQP_URL);
-        connection.on('close', () => {
-            console.log('RabbitMQ reconnecting...');
-            return setTimeout(connect, 1000);
-        });
-        console.log('RabbitMQ Connected');
         channel = await createChannel(connection);
     } catch (e) {
-        console.error(e);
-        throw new ClientError('Unable to connect to RabbitMQ');
+        throw e;
     }
 };
 
@@ -36,16 +32,21 @@ const createChannel = async (
         console.log('RabbitMQ channel created');
         return channel;
     } catch (e) {
-        console.error(e);
-        throw new ClientError('RabbitMQ channel error');
+        throw e;
     }
 };
 
 const getConnection = (): amqp.Connection => {
+    if (!connection) {
+        throw new Error('No connection set for RabbitMQ');
+    }
     return connection;
 };
 
 const getChannel = (): amqp.Channel => {
+    if (!channel) {
+        throw new Error('No channel set for RabbitMQ');
+    }
     return channel;
 };
 
