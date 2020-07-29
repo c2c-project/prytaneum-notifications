@@ -1,26 +1,13 @@
 import express from 'express';
-import { v5 as uuidv5 } from 'uuid';
-import fs from 'fs';
 
 import Notifications from '../lib/notifications';
 import Invite from '../modules/invite';
 import Subscribe from '../modules/subscribe';
-import notificationConsumer from '../lib/jobs/notifications';
 
 import env from '../config/env';
 import { ClientError } from 'lib/errors';
 
 const router = express.Router();
-
-router.post('/test', async (req, res, next) => {
-    try {
-        await notificationConsumer();
-        res.status(200).send();
-    } catch (e) {
-        console.error(e);
-        next(e);
-    }
-});
 
 export interface InviteeData {
     email: string;
@@ -44,7 +31,6 @@ router.post('/invite-many', async (req, res, next) => {
         const unsubList = await Notifications.getUnsubList(data.region);
         const filteredInviteeList = data.inviteeList.filter(
             (item: InviteeData) => {
-                //const emailHash = uuidv5(item.email, uuidv5.URL);
                 return !unsubList.includes(item.email);
             }
         );
@@ -70,7 +56,6 @@ router.post('/invite-many', async (req, res, next) => {
             data.constituentScope,
             new Date(data.deliveryTime)
         );
-        console.log(results);
         res.status(200).send();
     } catch (e) {
         if (env.NODE_ENV === 'development') console.error(e);
@@ -119,7 +104,6 @@ router.post('/invite-one', async (req, res, next) => {
             data.constituentScope,
             new Date(data.deliveryTime)
         );
-        console.log(result);
         res.status(200).send();
     } catch (e) {
         if (env.NODE_ENV === 'development') console.error(e);
@@ -131,14 +115,6 @@ export interface NotifyManyData {
     townhallID: string;
     notificationDate: Date;
 }
-
-// router.post('/notify-many', async (req, res, next) => {
-//     try {
-//         res.status(200).send();
-//     } catch (e) {
-//         next(e);
-//     }
-// });
 
 export interface SubscribeData {
     email: string;
@@ -163,7 +139,6 @@ router.post('/subscribe', async (req, res, next) => {
             data.region
         );
         if (env.NODE_ENV === 'test') {
-            //console.log(`Adding to subList: ${data.email}, ${data.region}`);
             res.status(200).send(isUnsubscribed);
             return;
         }
@@ -199,7 +174,6 @@ router.post('/unsubscribe', async (req, res, next) => {
             data.region
         );
         if (env.NODE_ENV === 'test') {
-            //console.log(`Adding to unsubList: ${data.email}, ${data.region}`);
             res.status(200).send(isSubscribed);
             return;
         }

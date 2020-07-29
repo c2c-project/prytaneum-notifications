@@ -1,6 +1,5 @@
 import Collections from 'db';
 import { UpdateWriteOpResult } from 'mongodb';
-import { v5 as uuidv5 } from 'uuid';
 
 /**
  * @description fetches the relevant up to date unsubscribed list from the database
@@ -38,8 +37,7 @@ const addToUnsubList = async (
     email: string,
     region: string
 ): Promise<UpdateWriteOpResult> => {
-    const emailHash = uuidv5(email, uuidv5.URL);
-    const query = { $addToSet: { unsubscribeList: emailHash } };
+    const query = { $addToSet: { unsubscribeList: email } };
     return Collections.Notifications().updateOne({ region }, query);
 };
 
@@ -53,8 +51,7 @@ const removeFromUnsubList = async (
     email: string,
     region: string
 ): Promise<UpdateWriteOpResult> => {
-    const emailHash = uuidv5(email, uuidv5.URL);
-    const query = { $pull: { unsubscribeList: emailHash } };
+    const query = { $pull: { unsubscribeList: email } };
     return Collections.Notifications().updateOne({ region }, query);
 };
 
@@ -68,7 +65,6 @@ const addToSubList = async (
     email: string,
     region: string
 ): Promise<UpdateWriteOpResult> => {
-    //const emailHash = uuidv5(email, uuidv5.URL);
     const query = { $addToSet: { subscribeList: email } };
     return Collections.Notifications().updateOne({ region }, query);
 };
@@ -83,7 +79,6 @@ const removeFromSubList = async (
     email: string,
     region: string
 ): Promise<UpdateWriteOpResult> => {
-    //const emailHash = uuidv5(email, uuidv5.URL);
     const query = { $pull: { subscribeList: email } };
     return Collections.Notifications().updateOne({ region }, query);
 };
@@ -118,13 +113,12 @@ const isUnsubscribed = async (
     email: string,
     region: string
 ): Promise<boolean> => {
-    const emailHash = uuidv5(email, uuidv5.URL);
     const doc = await Collections.Notifications().findOne({ region });
     if (doc === null) {
         throw new Error('Error finding region document');
     }
     const unsubscribeList = doc.unsubscribeList;
-    return unsubscribeList.includes(emailHash);
+    return unsubscribeList.includes(email);
 };
 
 export default {
