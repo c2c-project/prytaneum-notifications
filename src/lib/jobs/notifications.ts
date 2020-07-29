@@ -16,17 +16,9 @@ const testData: notifiationJobData = {
 
 const notificationConsumer = async () => {
     try {
-        const queue = 'notifications';
+        const queue = 'notifications'; //Defines the queue name to consume
         const channel = Rabbitmq.getChannel();
-        //console.log(channel);
         await channel.assertQueue(queue);
-        const success = channel.sendToQueue(
-            queue,
-            Buffer.from(JSON.stringify(testData))
-        );
-        if (!success) {
-            throw new ClientError('Failed to send data to channel queue');
-        }
         const notifications: Array<notifiationJobData> = [];
         await channel.consume(queue, (msg) => {
             if (msg) {
@@ -42,6 +34,8 @@ const notificationConsumer = async () => {
             const date = new Date(notificationDateISO);
             Notifications.notifyMany(subList, date);
         });
+        //TODO Figure out what time interval should be used for this
+        //setTimeout(notificationConsumer, 10000);
     } catch (e) {
         console.error(e);
         throw new ClientError('Problem with notification consumer');
