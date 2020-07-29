@@ -1,6 +1,6 @@
 import express from 'express';
 
-import Notifications from '../lib/notifications';
+import Notifications from '../lib/notificaitons/notifications';
 import Invite from '../modules/invite';
 import Subscribe from '../modules/subscribe';
 

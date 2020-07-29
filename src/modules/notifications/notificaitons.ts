@@ -1,4 +1,4 @@
-import Email from '../lib/emails/email';
+import Email from '../../lib/emails/email';
 
 /**
  * @description Send out email notificaions from the subList

@@ -1,4 +1,3 @@
-import { v5 as uuidv5 } from 'uuid';
 import { performance } from 'perf_hooks';
 import jwt from 'jsonwebtoken';
 
@@ -75,7 +74,6 @@ const addUnsubLink = (message: string, unsubLink: string): string => {
  */
 const generateInviteLink = (email: string): string => {
     const startTime = performance.now();
-    const uuid = uuidv5(email, uuidv5.URL);
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
         expiresIn: '7d',

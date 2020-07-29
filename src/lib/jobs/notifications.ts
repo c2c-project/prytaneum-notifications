@@ -1,18 +1,13 @@
 import Rabbitmq from '../rabbitmq';
 import { ClientError } from 'lib/errors';
-import DB from '../notifications';
-import Notifications from '../../modules/notificaitons';
+import DB from '../notificaitons/notifications';
+import Notifications from '../../modules/notifications/notificaitons';
 
 export interface notifiationJobData {
     region: string;
     notificationDateISO: string;
     //TownHallID?
 }
-
-const testData: notifiationJobData = {
-    region: 'west_coast',
-    notificationDateISO: new Date().toISOString(),
-};
 
 const notificationConsumer = async () => {
     try {
