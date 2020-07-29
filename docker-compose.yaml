@@ -18,6 +18,6 @@ services:
         ports:
             - '5672:5672'
     # mongo-seed:
-    #     build: ./mongo-seed
+    #     build: ./seed
     #     links:
     #         - mongo
