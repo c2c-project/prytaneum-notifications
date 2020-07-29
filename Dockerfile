@@ -1,21 +1,26 @@
-FROM node:14.4.0
-
-# Create app directory
+# MINIMAL DEV
+FROM node:14.5.0-slim as BASE_IMAGE
 WORKDIR /usr/app
-
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package.json ./
-COPY yarn.lock  ./
-COPY .env ./
-
-RUN yarn install
-# If you are building your code for production
-# RUN npm ci --only=production
-
-# Bundle app source
-COPY . .
-
+COPY package.json yarn.lock ./
+RUN apt-get update \
+	&& apt-get install -y python make g++ \
+	&& yarn install --frozen-lockfile && yarn cache clean
 EXPOSE 3000
-CMD [ "yarn", "start" ]
+
+# BUILD
+FROM BASE_IMAGE as BUILD_IMAGE
+COPY . .
+RUN yarn build \
+	# yarn doesn't have a prune for production cause ??
+	&& npm prune --production \
+	&& yarn cache clean \
+	&& yarn autoclean --force
+
+# PROD
+FROM node:14.5.0-slim
+WORKDIR /usr/app
+COPY --from=BUILD_IMAGE /usr/app/src/dist ./src/dist
+COPY --from=BUILD_IMAGE /usr/app/.env ./
+COPY --from=BUILD_IMAGE /usr/app/node_modules ./node_modules
+EXPOSE 3000
+CMD ["node", "./dist/index.js"]

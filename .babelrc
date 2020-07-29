@@ -10,5 +10,7 @@
                 "extensions": [".js", ".jsx", ".es", ".es6", ".mjs", ".ts"]
             }
         ]
-    ]
+    ],
+    "include": ["./src"],
+    "exclude": ["**/*.test.*"]
 }

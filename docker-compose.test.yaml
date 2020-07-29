@@ -1,12 +1,20 @@
 version: '3.8'
 services:
     notification-service:
-        build: .
+        build:
+            context: .
+            target: BASE_IMAGE
         volumes:
             - ./src:/usr/app/src
+        command: yarn test --coverage
+        volumes:
+            - ./src:/usr/app/src
+            - ./package.json:/usr/app/package.json
+            - ./yarn.lock:/usr/app/yarn.lock
+            - ./.babelrc:/usr/app/.babelrc
+            - ./.env:/usr/app/.env
         ports:
             - '3000:3000'
-        command: yarn test
         depends_on:
             - mongo
     mongo:
