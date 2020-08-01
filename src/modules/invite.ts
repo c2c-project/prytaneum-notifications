@@ -1,9 +1,11 @@
-import { performance } from 'perf_hooks';
+/* eslint-disable @typescript-eslint/indent */
+import Mailgun from 'mailgun-js';
 import jwt from 'jsonwebtoken';
 
+import { InviteeData } from 'routes';
+import logger from '../lib/logger';
 import env from '../config/env';
 import Email from '../lib/emails/email';
-import { InviteeData } from 'routes';
 
 export interface InviteEmailParams {
     fName: string;
@@ -61,9 +63,9 @@ const getInviteString = ({
     `;
 };
 
-//Create function to add the unsub link to end of email message
+// Create function to add the unsub link to end of email message
 const addUnsubLink = (message: string, unsubLink: string): string => {
-    const updatedMessage: string = message + `\n${unsubLink}`;
+    const updatedMessage = `${message}\n${unsubLink}`;
     return updatedMessage;
 };
 
@@ -73,19 +75,12 @@ const addUnsubLink = (message: string, unsubLink: string): string => {
  * @return {string} link string
  */
 const generateInviteLink = (email: string): string => {
-    const startTime = performance.now();
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
         expiresIn: '7d',
     };
     const payload = { email };
     const token = jwt.sign(payload, env.JWT_SECRET, jwtOptions);
-    const endTime = performance.now();
-    console.log(
-        'Time it takes per email hash: ' +
-            (endTime - startTime) +
-            ' milliseconds.'
-    );
     return `${env.ORIGIN}/invited/${token}`;
 };
 
@@ -95,7 +90,7 @@ const generateInviteLink = (email: string): string => {
  * @return {string} link string
  */
 const generateUnsubscribeLink = (email: string): string => {
-    //const uuid = uuidv5(email, uuidv5.URL);
+    // const uuid = uuidv5(email, uuidv5.URL);
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
         expiresIn: '7d',
@@ -122,66 +117,44 @@ const inviteMany = async (
     eventDateTime: string,
     constituentScope: string,
     deliveryTime: Date
-): Promise<any> => {
-    let invitee: InviteeData;
-    const results: any = [];
-    for (invitee of inviteeList) {
-        const { email, fName } = invitee;
-        const registrationLink = generateInviteLink(email);
-        const inviteBody = getInviteString({
-            MoC,
-            topic,
-            eventDateTime,
-            constituentScope,
-        })({ fName, registrationLink });
-        const unsubscribeLink = generateUnsubscribeLink(email);
-        const inviteString = addUnsubLink(inviteBody, unsubscribeLink);
-        const subject = 'Prytaneum Town Hall Invite';
-        const result = await Email.sendEmail(
-            email,
-            subject,
-            inviteString,
-            deliveryTime
-        );
-        results.push(result);
+): Promise<
+    Array<string | Mailgun.messages.SendResponse | undefined> | undefined
+    // eslint-disable-next-line consistent-return
+> => {
+    try {
+        let invitee: InviteeData;
+        const results: Array<
+            string | Mailgun.messages.SendResponse | undefined
+        > = [];
+        // TODO Update for each 1k invitees to handle Mailgun limit
+        // eslint-disable-next-line no-restricted-syntax
+        for (invitee of inviteeList) {
+            const { email, fName } = invitee;
+            const registrationLink = generateInviteLink(email);
+            const inviteBody = getInviteString({
+                MoC,
+                topic,
+                eventDateTime,
+                constituentScope,
+            })({ fName, registrationLink });
+            const unsubscribeLink = generateUnsubscribeLink(email);
+            const inviteString = addUnsubLink(inviteBody, unsubscribeLink);
+            const subject = 'Prytaneum Town Hall Invite';
+            // eslint-disable-next-line no-await-in-loop
+            const result = await Email.sendEmail(
+                email,
+                subject,
+                inviteString,
+                deliveryTime
+            );
+            results.push(result);
+        }
+        return results;
+    } catch (e) {
+        logger.err(e);
     }
-    return results;
-};
-
-/**
- * @description sends out an email invite to a potential user
- * @param {string} email the email address that will be invited
- * @param {string} fName invitee name
- * @param {string} MoC Member of Congress
- * @param {string} topic Topic for the Town Hall
- * @param {string} eventDateTime The event date and time
- * @param {string} constituentScope the constituent scope
- * @param {string} deliveryTime the date & time that the email should be sent out in ISO format
- * @return {Promise<any>} promise that resolves to the mailgun email results
- */
-const inviteOne = async (
-    email: string,
-    fName: string,
-    MoC: string,
-    topic: string,
-    eventDateTime: string,
-    constituentScope: string,
-    deliveryTime: Date
-): Promise<any> => {
-    const registrationLink = generateInviteLink(email);
-    const inviteBody = getInviteString({
-        MoC,
-        topic,
-        eventDateTime,
-        constituentScope,
-    })({ fName, registrationLink });
-    const unsubscribeLink = generateUnsubscribeLink(email);
-    const inviteString = addUnsubLink(inviteBody, unsubscribeLink);
-    const subject = 'Prytaneum Town Hall Invite';
-    return await Email.sendEmail(email, subject, inviteString, deliveryTime);
 };
 
 export default {
-    inviteOne,
     inviteMany,
 };

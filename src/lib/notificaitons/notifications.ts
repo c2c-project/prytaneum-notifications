@@ -94,12 +94,12 @@ const isSubscribed = async (
     region: string
 ): Promise<boolean> => {
     // const query = { subscribeList: { $elemMatch: email } };
-    //const emailHash = uuidv5(email, uuidv5.URL);
+    // const emailHash = uuidv5(email, uuidv5.URL);
     const doc = await Collections.Notifications().findOne({ region });
     if (doc === null) {
         throw new Error('Error finding region document');
     }
-    const subscribeList = doc.subscribeList;
+    const { subscribeList } = doc;
     return subscribeList.includes(email);
 };
 
@@ -117,7 +117,7 @@ const isUnsubscribed = async (
     if (doc === null) {
         throw new Error('Error finding region document');
     }
-    const unsubscribeList = doc.unsubscribeList;
+    const { unsubscribeList } = doc;
     return unsubscribeList.includes(email);
 };
 
