@@ -6,15 +6,15 @@ services:
             target: BASE_IMAGE
         volumes:
             - ./src:/usr/app/src
-        command: yarn test --coverage
+        ports:
+            - '3002:3002'
         volumes:
             - ./src:/usr/app/src
             - ./package.json:/usr/app/package.json
             - ./yarn.lock:/usr/app/yarn.lock
             - ./.babelrc:/usr/app/.babelrc
             - ./.env:/usr/app/.env
-        ports:
-            - '3000:3000'
+        command: yarn test
         depends_on:
             - mongo
     mongo:
