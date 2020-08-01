@@ -11,5 +11,17 @@ export default function (app: Express): void {
     app.use(express.json());
     app.use(express.urlencoded({ extended: false })); // TODO: read more about this
     app.use(cookieParser());
-    app.use(cors());
+    app.use(
+        cors({
+            origin: 'http://localhost:3000',
+            exposedHeaders: [
+                'moc',
+                'topic',
+                'eventdatetime',
+                'constituentscope',
+                'region',
+                'deliverytime',
+            ],
+        })
+    );
 }
