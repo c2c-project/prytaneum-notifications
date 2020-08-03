@@ -6,51 +6,26 @@ The notification-service manages the notifications that are sent out to potentia
 
 ## API Endpoitns
 
-### /invite-many
+### /invite
 
 - Description: An `admin`, `moderator`, and `speaker` can send out an invite to a list of invitees via email while ensuring not to send them to unsubscribed users.
+- Limitations: In the case of many unsubscribed users we may need to use multiple unsubLists
 - HTTP Method: POST
 - Request Body:
 
 ```typescript
-{
-  inviteeList: [{email: 'test@example.com', fName: 'First', lName: 'Last' }];
-  MoC: 'Member of Congress',
-  topic: 'Town Hall Topic',
-  eventDateTime: 'July 31, 12:00 PM PST',
-  constituentScope: 'State',
-  region: 'example_coast',
-  deliveryTime: 'ISO Date-Time',
-}
+  inviteeList: 'email,fName,lName\ntest@example.com,First,Last' // List sent as strigified csv array buffer
 ```
 
-- Response:
-  - Status 200
-    - Success
-    - Status 400
-      - message: 'Invalid ISO Date format' | 'Past time picked'
-    - Status 500
-      - Invalid data sent or Non-Client error
-
-### /invite-one
-
-- An `admin`, `moderator`, and `speaker` can send out an invite to a single contact who is not unsubscribed.
-- HTTP Method: POST
-- Request Body:
+- Request Headers:
 
 ```typescript
-{
-  email: 'test@example.com',
-  fName: 'First',
-  lName: 'Last',
-  MoC: 'Member of Congress',
+  MoC: 'Member of Congress'
   topic: 'Town Hall Topic',
-  eventDateTime: 'July 31, 12:00 PM PST',
-  constituentScope: 'State',
-  region: 'example_coast',
-  deliveryTime: 'ISO Date-Time',
-}
-
+  eventDateTime: 'July 31, 12:00 PM PST'
+  constituentScope: 'State'
+  region: 'example_coast'
+  deliveryTime: 'ISO Date-Time'
 ```
 
 - Response:
@@ -58,10 +33,12 @@ The notification-service manages the notifications that are sent out to potentia
     - Success
   - Status 400
     - message: 'Invalid ISO Date format' | 'Past time picked'
+  - Status 500
+    - Invalid data sent or Non-Client error
 
 ### /subscribe
 
-- An `admin`, `moderator`, `speaker`, and `user` can subscribe to getting notifications sent to their email.
+- Description: An `admin`, `moderator`, `speaker`, and `user` can subscribe to getting notifications sent to their email.
 - HTTP Method: POST
 - Request Body:
 
@@ -77,10 +54,12 @@ The notification-service manages the notifications that are sent out to potentia
     - Success
   - Status 400
     - message: 'Invalid Data'
+  - Status 500
+    - Invalid data sent or Non-Client error
 
 ### /unsubscribe
 
-- An `admin`, `moderator`, `speaker`, and `user` can unsubscribe to getting notifications sent to their email.
+- Description: An `admin`, `moderator`, `speaker`, and `user` can unsubscribe to getting notifications sent to their email.
 - HTTP Method: POST
 - Request Body:
 
@@ -96,3 +75,5 @@ The notification-service manages the notifications that are sent out to potentia
     - Success
   - Status 400
     - message: 'Invalid Data'
+  - Status 500
+    - Invalid data sent or Non-Client error
