@@ -1,11 +1,11 @@
-import Notifications from './notifications';
 import Collections, { connect, close, NotificationDoc } from 'db';
 import { ObjectId } from 'mongodb';
+import Notifications from './notifications';
 
 const _id: ObjectId = new ObjectId();
 const testUnsubscribeList = ['unsubscribed@example.com'];
 const testSubscribeList = ['subscribed@example.com'];
-const testRegion = 'test';
+const testRegion = 'test2';
 const testDoc: NotificationDoc = {
     _id,
     unsubscribeList: testUnsubscribeList,
@@ -32,13 +32,9 @@ describe('Notifications Mongo', () => {
                 expect(subList).toEqual(testSubscribeList);
             });
             it('should throw an error if given an invalid region', async () => {
-                try {
-                    const subList = await Notifications.getSubList('invalid');
-                    expect(subList).toBeUndefined();
-                } catch (e) {
-                    expect(e).toBeInstanceOf(Error);
-                    expect(e.message).toEqual('Error finding region document');
-                }
+                await expect(
+                    Notifications.getSubList('invalid')
+                ).rejects.toThrowError('Error finding region document');
             });
         });
         describe('addToSubList', () => {
@@ -101,16 +97,12 @@ describe('Notifications Mongo', () => {
                 expect(isSubscribed).toBeFalsy();
             });
             it('should throw error if given an invalid region', async () => {
-                try {
-                    const isSubscribed = await Notifications.isSubscribed(
+                await expect(
+                    Notifications.isSubscribed(
                         'subscribed@example.com',
                         'invalid'
-                    );
-                    expect(isSubscribed).toBeTruthy();
-                } catch (e) {
-                    expect(e).toBeInstanceOf(Error);
-                    expect(e.message).toEqual('Error finding region document');
-                }
+                    )
+                ).rejects.toThrowError('Error finding region document');
             });
         });
     });
@@ -122,15 +114,9 @@ describe('Notifications Mongo', () => {
                 expect(unsubList).toEqual(testUnsubscribeList);
             });
             it('should throw an error if given an invalid region', async () => {
-                try {
-                    const unsubList = await Notifications.getUnsubList(
-                        'invalid'
-                    );
-                    expect(unsubList).toBeUndefined();
-                } catch (e) {
-                    expect(e).toBeInstanceOf(Error);
-                    expect(e.message).toEqual('Error finding region document');
-                }
+                await expect(
+                    Notifications.getUnsubList('invalid')
+                ).rejects.toThrowError('Error finding region document');
             });
         });
         describe('addToUnsubList', () => {
@@ -193,16 +179,12 @@ describe('Notifications Mongo', () => {
                 expect(isUnsubscribed).toBeFalsy();
             });
             it('should throw error if given an invalid region', async () => {
-                try {
-                    const isUnsubscribed = await Notifications.isUnsubscribed(
+                await expect(
+                    Notifications.isUnsubscribed(
                         'unsubscribed@example.com',
                         'invalid'
-                    );
-                    expect(isUnsubscribed).toBeTruthy();
-                } catch (e) {
-                    expect(e).toBeInstanceOf(Error);
-                    expect(e.message).toEqual('Error finding region document');
-                }
+                    )
+                ).rejects.toThrowError('Error finding region document');
             });
         });
     });
