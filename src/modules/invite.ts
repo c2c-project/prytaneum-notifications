@@ -1,28 +1,18 @@
 /* eslint-disable @typescript-eslint/indent */
 import Mailgun from 'mailgun-js';
 import jwt from 'jsonwebtoken';
+import { isUndefined } from 'util';
 
 import { InviteeData } from 'routes';
-import logger from '../lib/logger';
 import env from '../config/env';
 import Email from '../lib/emails/email';
 
 export interface InviteEmailParams {
-    fName: string;
     MoC: string;
     topic: string;
     eventDateTime: string;
     constituentScope: string;
-    registrationLink: string;
 }
-export type GlobalParams = Omit<
-    InviteEmailParams,
-    'fName' | 'registrationLink'
->;
-export type EmailSpecificParams = Pick<
-    InviteEmailParams,
-    'fName' | 'registrationLink'
->;
 
 /**
  * @description gets a customized email template message for invites
@@ -31,10 +21,6 @@ export type EmailSpecificParams = Pick<
  * @param {string} eventDateTime The event date and time
  * @param {string} constituentScope the constituent scope
  *
- * -->
- * @param {string} fName invitee name
- * @param {string} registrationLink a generated link for registration
- *
  * @returns {string} the filled out invite template string
  */
 const getInviteString = ({
@@ -42,13 +28,10 @@ const getInviteString = ({
     topic,
     eventDateTime,
     constituentScope,
-}: GlobalParams) => ({
-    fName,
-    registrationLink,
-}: EmailSpecificParams): string => {
-    return `Dear  ${fName},
+}: InviteEmailParams): string => {
+    return `Dear  %recipient.fName%,
     
-    Your Member of Congress,${MoC} will be participating in an online Deliberative Townhall on ${topic} at ${eventDateTime}. This event is organized by Connecting to Congress, an independent, non-partisan initiative led by the Ohio State University, whose mission is to connect a representative sample of constituents with their elected officials in productive online townhall meetings. All ${constituentScope} constituents are invited to attend this event; if you would like to participate, please register here ${registrationLink}.
+    Your Member of Congress,${MoC} will be participating in an online Deliberative Townhall on ${topic} at ${eventDateTime}. This event is organized by Connecting to Congress, an independent, non-partisan initiative led by the Ohio State University, whose mission is to connect a representative sample of constituents with their elected officials in productive online townhall meetings. All ${constituentScope} constituents are invited to attend this event; if you would like to participate, please register here %recipient.inviteLink%.
 
     The townhall will be online using the GoToWebcast platform, which has a limit of 3000 participants per event. After you register, you will receive an email with a unique link to join the online townhall,  which you can access via smartphone, tablet  or computer.
 
@@ -58,8 +41,6 @@ const getInviteString = ({
 
     The Connecting to Congress Team
     For more information, please visit: https://connectingtocongress.org/
-
-    Don't want emails from Prytaneum?
     `;
 };
 
@@ -100,6 +81,35 @@ const generateUnsubscribeLink = (email: string): string => {
     return `${env.ORIGIN}/unsubscribe/${token}`;
 };
 
+interface RecipiantVariables {
+    [key: string]: { fName: string; inviteLink: string; unsubLink: string };
+}
+
+/**
+ * @description Takes in inviteeList and constructs list of emails and strigified recipiantVariables
+ * @param inviteeList list of invitee data
+ * @return Returns the recipiant variables along with the list of recipiant emails
+ */
+const generateRecipiantVariables = (
+    inviteeList: Array<InviteeData>
+): { emails: Array<string>; recipiantVariables: string } => {
+    if (inviteeList.length === 0) {
+        throw new Error('Empty invitee list');
+    }
+    const emails = [];
+    const recipiantVariables: RecipiantVariables = {};
+    let invitee = inviteeList.pop();
+    while (!isUndefined(invitee)) {
+        const { fName, email } = invitee;
+        const inviteLink = generateInviteLink(email);
+        const unsubLink = generateUnsubscribeLink(email);
+        recipiantVariables[email] = { fName, inviteLink, unsubLink };
+        emails.push(email);
+        invitee = inviteeList.pop();
+    }
+    return { emails, recipiantVariables: JSON.stringify(recipiantVariables) };
+};
+
 /**
  * @description sends out invites to a list of potential users
  * @param {string} inviteeList list of invitee data
@@ -108,7 +118,7 @@ const generateUnsubscribeLink = (email: string): string => {
  * @param {string} eventDateTime The event date and time
  * @param {string} constituentScope the constituent scope
  * @param {string} deliveryTime the date & time that the email should be sent out in ISO format
- * @return {Promise<any>} promise that resolves to the mailgun email results
+ * @return {Promise<Array<string | Mailgun.messages.SendResponse>>} promise that resolves to the mailgun email results in array
  */
 const inviteMany = async (
     inviteeList: Array<InviteeData>,
@@ -117,42 +127,37 @@ const inviteMany = async (
     eventDateTime: string,
     constituentScope: string,
     deliveryTime: Date
-): Promise<
-    Array<string | Mailgun.messages.SendResponse | undefined> | undefined
-    // eslint-disable-next-line consistent-return
-> => {
-    try {
-        let invitee: InviteeData;
-        const results: Array<
-            string | Mailgun.messages.SendResponse | undefined
-        > = [];
-        // TODO Update for each 1k invitees to handle Mailgun limit
-        // eslint-disable-next-line no-restricted-syntax
-        for (invitee of inviteeList) {
-            const { email, fName } = invitee;
-            const registrationLink = generateInviteLink(email);
-            const inviteBody = getInviteString({
-                MoC,
-                topic,
-                eventDateTime,
-                constituentScope,
-            })({ fName, registrationLink });
-            const unsubscribeLink = generateUnsubscribeLink(email);
-            const inviteString = addUnsubLink(inviteBody, unsubscribeLink);
-            const subject = 'Prytaneum Town Hall Invite';
-            // eslint-disable-next-line no-await-in-loop
-            const result = await Email.sendEmail(
-                email,
+): Promise<Array<string | Mailgun.messages.SendResponse>> => {
+    const results: Array<Promise<string | Mailgun.messages.SendResponse>> = [];
+    const inviteBody = getInviteString({
+        MoC,
+        topic,
+        eventDateTime,
+        constituentScope,
+    });
+    const inviteString = addUnsubLink(
+        inviteBody,
+        'Unsubscribe: %recipient.unsubLink%'
+    );
+    const subject = 'Prytaneum Invite';
+    // TODO Test with 1k invitees to handle Mailgun limit
+    while (inviteeList.length) {
+        // Take max of 1k invitees and format to list of emails and string of recipiantVariables
+        const subset = inviteeList.splice(0, 1000);
+        const { emails, recipiantVariables } = generateRecipiantVariables(
+            subset
+        );
+        results.push(
+            Email.sendEmail(
+                emails,
                 subject,
                 inviteString,
-                deliveryTime
-            );
-            results.push(result);
-        }
-        return results;
-    } catch (e) {
-        logger.err(e);
+                deliveryTime,
+                recipiantVariables
+            )
+        );
     }
+    return Promise.all(results);
 };
 
 export default {
