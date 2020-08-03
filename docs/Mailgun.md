@@ -27,10 +27,6 @@
 
 ## Performance
 
-### uuidv5 creation
-
-- Avg of `.08 milliseconds/transformation`
-
 ### JWT Signing
 
 - Avg of `.2 milliseconds/signing`

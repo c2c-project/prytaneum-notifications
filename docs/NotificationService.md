@@ -2,7 +2,7 @@
 
 ## Endpoints
 
-## invite-many
+## invite
 
 An `admin`, `moderator`, and `speaker` can uplaod a file which can be parsed into an array of objects containing the relevant information to send out a single invitation to all contacts who are not unsubscribed.
 
@@ -15,34 +15,13 @@ sequenceDiagram
   participant ES as Email Service
   participant R as Recipiant
   U-->>C: Upload File
-  C-->>NS: Format & Send Data
+  C-->>NS: Send Data as string
+  NS-->>NS: Parse data
   NS-->>DB: Request Unsubscribe List
   DB->>NS: Get Unsub List
   NS-->>ES: Filter & Send Data
   ES-->>R: Notification
-  NS->>C: Get Success/Error Response
-  C->>U: Display Status of Response
-```
-
-## invite-one
-
-An `admin`, `moderator`, and `speaker` can send out a invite to a single contact who is not unsubscribed.
-
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant C as Client
-  participant NS as Notification Service
-  participant DB as Database
-  participant ES as Email Service
-  participant R as Recipiant
-  U-->>C: Enter Recipiant Data
-  C-->>NS: Send Recipiant Data
-  NS-->>DB: Request Unsubscribe List
-  DB->>NS: Get Unsub List
-  NS-->>ES: Send Data
-  ES-->>R: Notification
-  NS->>C: Get Success/Error Response
+  NS->>C: Return Success/Error Response
   C->>U: Display Status of Response
 ```
 
@@ -60,7 +39,7 @@ sequenceDiagram
   C-->>NS: Subscribe
   NS-->>DB: Append Email to Subscriber List
   DB->>NS: Response
-  NS->>C: Get Success/Error Response
+  NS->>C: Return Success/Error Response
   C->>U: Display Status of Response
 ```
 
@@ -78,7 +57,7 @@ sequenceDiagram
   C-->>NS: Unsubscribe Request
   NS-->>DB: Append Email to Unsubscribe List
   DB->>NS: Response
-  NS->>C: Get Success/Error Response
+  NS->>C: Return Success/Error Response
   C->>U: Display Status of Response
 ```
 
