@@ -27,6 +27,9 @@ const sendEmail = async (
     // TODO allow user to pass through custom api key and domain
     if (env.NODE_ENV === 'test') {
         return new Promise<string>((resolve) => resolve('success'));
+    }
+    if (env.NODE_ENV === 'development') {
+        return new Promise<string>((resolve) => resolve('success'));
         return mg.messages().send({
             to,
             from: `Prytaneum <${env.MAILGUN_FROM_EMAIL}>`,
@@ -36,9 +39,6 @@ const sendEmail = async (
             'o:deliverytime': deliveryTime.toUTCString(),
             'o:testmode': 'true',
         });
-    }
-    if (env.NODE_ENV === 'development') {
-        return new Promise<string>((resolve) => resolve('success'));
     }
     return mg.messages().send({
         to,
