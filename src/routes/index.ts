@@ -2,7 +2,7 @@ import express from 'express';
 import Papa from 'papaparse';
 
 import { ClientError } from 'lib/errors';
-import Notifications from '../lib/notificaitons/notifications';
+import Notifications from '../lib/notificaitons';
 import Invite from '../modules/invite';
 import Subscribe from '../modules/subscribe';
 
@@ -27,7 +27,7 @@ export interface InviteManyData {
     deliveryTime?: string; // ISO format
 }
 
-router.post('/invite-many', (req, res, next) => {
+router.post('/invite', (req, res, next) => {
     try {
         // Get headers and ensure they are all defined & that deliveryTime is valid
         const MoC = req.headers.moc as string | undefined;
@@ -48,7 +48,7 @@ router.post('/invite-many', (req, res, next) => {
             region === undefined
         )
             throw new ClientError('Undefined Header Data');
-
+        // Check deliveryTime
         let deliveryTime: Date;
         if (deliveryTimeHeader === undefined) {
             // Deliver right away by default if no deliveryTime is given
@@ -70,13 +70,13 @@ router.post('/invite-many', (req, res, next) => {
             csvString += data;
         });
         req.on('end', () => {
-            async function notify() {
+            async function invite() {
                 try {
-                    logger.print(`CSV String: ${csvString}`);
+                    // Parse the csvString
                     const result = Papa.parse(csvString, {
                         header: true,
                     });
-                    const inviteeList = result.data as Array<InviteeData>;
+                    const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
                     const unsubSet = new Set(
                         await Notifications.getUnsubList(region as string) // Checked if undefined earlier
                     );
@@ -86,8 +86,8 @@ router.post('/invite-many', (req, res, next) => {
                         }
                     );
                     if (filteredInviteeList.length === 0) {
-                        // throw new ClientError('No valid invitees')
                         res.status(400).send('No valid invitees');
+                        // throw new ClientError('No valid invitees') // TODO FIX
                     }
                     const results = await Invite.inviteMany(
                         filteredInviteeList,
@@ -104,7 +104,7 @@ router.post('/invite-many', (req, res, next) => {
                 }
             }
             // eslint-disable-next-line no-void
-            void notify();
+            void invite();
         });
     } catch (e) {
         logger.err(e);
@@ -129,12 +129,13 @@ router.post('/subscribe', async (req, res, next) => {
         );
         if (isSubscribed) {
             res.status(400).send('Already subscribed');
-            // throw new ClientError('Already subscribed.');
+            // throw new ClientError('Already subscribed.'); // TODO FIX
         }
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
             data.region
         );
+        // By default any subscriber will be removed from the unsub list
         if (isUnsubscribed) {
             await Notifications.removeFromUnsubList(data.email, data.region);
             await Subscribe.mailgunDeleteFromUnsubList(data.email);
@@ -159,17 +160,17 @@ router.post('/unsubscribe', async (req, res, next) => {
         );
         if (isUnsubscribed) {
             res.status(400).send('Already unsubscribed');
-            // throw new ClientError('Already unsubscribed');
+            // throw new ClientError('Already unsubscribed'); // TODO FIX
         }
         const isSubscribed = await Notifications.isSubscribed(
             data.email,
             data.region
         );
         if (isSubscribed)
+            // Remove email from subscribe list
             await Notifications.removeFromSubList(data.email, data.region);
         await Notifications.addToUnsubList(data.email, data.region);
         await Subscribe.mailgunUnsubscribe(data.email);
-        // Add to mailgun unsub list as well
         res.status(200).send();
     } catch (e) {
         logger.err(e);

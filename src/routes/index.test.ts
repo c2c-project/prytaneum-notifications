@@ -41,10 +41,10 @@ afterEach(() => {
 const validDeliveryTime = new Date();
 
 describe('index', () => {
-    describe('#invite-many', () => {
+    describe('#invite', () => {
         it('should accept valid data', async () => {
             const { status } = await request(app)
-                .post('/invite-many')
+                .post('/invite')
                 .set('moc', testMoC)
                 .set('topic', testTopic)
                 .set('eventdatetime', testEventDateTime)
@@ -57,7 +57,7 @@ describe('index', () => {
         });
         it('should accept options with cors', async () => {
             const { status } = await request(app)
-                .options('/invite-many')
+                .options('/invite')
                 .set('moc', testMoC)
                 .set('topic', testTopic)
                 .set('eventdatetime', testEventDateTime)
@@ -70,7 +70,7 @@ describe('index', () => {
         });
         it('should accept valid deliveryTime', async () => {
             const { status } = await request(app)
-                .post('/invite-many')
+                .post('/invite')
                 .set('moc', testMoC)
                 .set('topic', testTopic)
                 .set('eventdatetime', testEventDateTime)
@@ -83,7 +83,7 @@ describe('index', () => {
         });
         it('should accept undefined deliveryTime & replace with valid deliveryTime', async () => {
             const { status, text } = await request(app)
-                .post('/invite-many')
+                .post('/invite')
                 .set('moc', testMoC)
                 .set('topic', testTopic)
                 .set('eventdatetime', testEventDateTime)
@@ -97,7 +97,7 @@ describe('index', () => {
         });
         it('should reject invalid deliveryTime', async () => {
             const { status } = await request(app)
-                .post('/invite-many')
+                .post('/invite')
                 .set('moc', testMoC)
                 .set('topic', testTopic)
                 .set('eventdatetime', testEventDateTime)
@@ -114,7 +114,7 @@ describe('index', () => {
                 'unsubscribed@example.com,Test,Name',
             ].join('\n');
             const { status, text } = await request(app)
-                .post('/invite-many')
+                .post('/invite')
                 .set('moc', testMoC)
                 .set('topic', testTopic)
                 .set('eventdatetime', testEventDateTime)
@@ -127,7 +127,7 @@ describe('index', () => {
             expect(status).toStrictEqual(400);
         });
         it('should reject no data', async () => {
-            const { status } = await request(app).post('/invite-many');
+            const { status } = await request(app).post('/invite');
             expect(status).toStrictEqual(400);
         });
     });
@@ -176,6 +176,7 @@ describe('index', () => {
             );
         });
         it('should find existing unsubscriber in unsubscribeList', async () => {
+            // Spies
             const isUnsubscribed = jest.spyOn(Notifications, 'isUnsubscribed');
             const removeFromUnsubList = jest.spyOn(
                 Notifications,
@@ -258,6 +259,7 @@ describe('index', () => {
             expect(mailgunUnsubscribe).toBeCalledWith(validData.email);
         });
         it('should reject and existing unsubscriber', async () => {
+            // Spies
             const isUnsubscried = jest.spyOn(Notifications, 'isUnsubscribed');
             const validData: SubscribeData = {
                 email: 'unsubscribed3@example.com',
@@ -273,6 +275,7 @@ describe('index', () => {
             );
         });
         it('should find existing subscriber in subscribeList', async () => {
+            // Spies
             const removeFromSubList = jest.spyOn(
                 Notifications,
                 'removeFromSubList'
