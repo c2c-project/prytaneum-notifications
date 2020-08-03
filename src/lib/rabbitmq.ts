@@ -1,39 +1,30 @@
 import amqp from 'amqplib';
 import env from '../config/env';
+import logger from './logger';
 
 let connection: amqp.Connection | null = null;
 let channel: amqp.Channel | null = null;
 
 /**
- * @description creates a connection and channel for rabbitmq
+ * @description create a channel which logs events
+ * @return Promise<amqp.Channel>
  */
-const connect = async (): Promise<void> => {
-    try {
-        connection = await amqp.connect(env.AMQP_URL);
-        channel = await createChannel(connection);
-    } catch (e) {
-        throw e;
-    }
+const createChannel = async (): Promise<amqp.Channel> => {
+    if (!connection) throw new Error('No connection set for RabbitMQ');
+    channel = await connection.createConfirmChannel();
+    channel.on('close', () => {
+        logger.print('RabbitMQ channel closed');
+    });
+    logger.print('RabbitMQ channel created');
+    return channel;
 };
 
 /**
- * @description create a channel which logs events
- * @param connection The amqp connection
- * @return Promise<amqp.Channel>
+ * @description creates a connection and channel for rabbitmq
  */
-const createChannel = async (
-    connection: amqp.Connection
-): Promise<amqp.Channel> => {
-    try {
-        const channel = await connection.createConfirmChannel();
-        channel.on('close', () => {
-            console.log('RabbitMQ channel closed');
-        });
-        console.log('RabbitMQ channel created');
-        return channel;
-    } catch (e) {
-        throw e;
-    }
+const connect = async (): Promise<void> => {
+    connection = await amqp.connect(env.AMQP_URL);
+    channel = await createChannel();
 };
 
 const getConnection = (): amqp.Connection => {
