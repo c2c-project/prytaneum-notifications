@@ -19,10 +19,10 @@ let Notifications: Collection<NotificationDoc>;
  * connects to mongo and initializes db
  */
 export async function connect(): Promise<void> {
-	await connectToMongo();
-	Notifications = initNotifications();
+    await connectToMongo();
+    Notifications = initNotifications();
 }
 
 export default {
-	Notifications: (): Collection<NotificationDoc> => Notifications,
+    Notifications: (): Collection<NotificationDoc> => Notifications,
 };

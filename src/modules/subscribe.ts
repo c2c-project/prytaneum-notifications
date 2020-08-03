@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import env from '../config/env';
 import Email from '../lib/emails/email';
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 type Status =
     | 'CONNECTED'
     | 'DISCONNECTED'
