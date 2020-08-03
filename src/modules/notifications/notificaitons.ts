@@ -17,7 +17,7 @@ const notifyMany = async (
     const results: Array<Promise<string | Mailgun.messages.SendResponse>> = [];
     while (subList.length) {
         // Take max of 1k emails to send for each mailgun batch
-        const emails = subList.slice(0, 1000);
+        const emails = subList.splice(0, 1000);
         // TODO Figure out what should be sent for notification
         const recipientVariables = '';
         const notificationString = 'Test Notification';
