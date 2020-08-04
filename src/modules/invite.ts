@@ -21,7 +21,6 @@ export interface InviteEmailParams {
  * @param {string} topic Topic for the Town Hall
  * @param {string} eventDateTime The event date and time
  * @param {string} constituentScope the constituent scope
- *
  * @returns {string} the filled out invite template string
  */
 const getInviteString = ({
@@ -159,8 +158,14 @@ const inviteMany = async (
     return Promise.all(results);
 };
 
+/**
+ * @description Valides a given delivery time header
+ * @param {string | Array<string> | undefined} deliveryTimeHeader delivery time taken from header
+ * @returns {Date} Given date as Date object if defined. Defaults to current Date object if undefined.
+ * @throws ClientError: If a given string is defined but invalid throws a formatting error
+ */
 const validateDeliveryTime = (
-    deliveryTimeHeader: string | string[] | undefined
+    deliveryTimeHeader: string | Array<string> | undefined
 ): Date => {
     let deliveryTime: Date;
     if (deliveryTimeHeader === undefined) {

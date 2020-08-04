@@ -7,7 +7,11 @@ import logger from './logger';
 let connection: amqp.Connection | undefined;
 let channel: amqp.Channel | undefined;
 
-const createConnection = async () => {
+/**
+ * @description create a connection which logs events
+ * @return {Promise<void>}
+ */
+const createConnection = async (): Promise<void> => {
     if (!isUndefined(connection)) return;
     connection = await amqp.connect(env.AMQP_URL);
     connection.on('error', (e) => {
@@ -21,11 +25,13 @@ const createConnection = async () => {
 
 /**
  * @description create a channel which logs events
- * @return Promise<amqp.Channel>
+ * @return {Promise<void>}
+ * @throws Error: if no connection is defined
  */
-const createChannel = async () => {
+const createChannel = async (): Promise<void> => {
+    if (isUndefined(connection))
+        throw new Error('No connection set for RabbitMQ');
     if (!isUndefined(channel)) return;
-    if (!connection) throw new Error('No connection set for RabbitMQ');
     channel = await connection.createConfirmChannel();
     channel.on('error', (e) => {
         logger.err(e);
@@ -38,21 +44,32 @@ const createChannel = async () => {
 
 /**
  * @description creates a connection and channel for rabbitmq
+ * @return {Promise<void>}
  */
 const connect = async (): Promise<void> => {
     await createConnection();
     await createChannel();
 };
 
+/**
+ * @description get the rabbitmq connection
+ * @return {amqp.Connection} rabbitmq connection
+ * @throws Error: if no connection is defined
+ */
 const getConnection = (): amqp.Connection => {
-    if (!connection) {
+    if (isUndefined(connection)) {
         throw new Error('No connection set for RabbitMQ');
     }
     return connection;
 };
 
+/**
+ * @description get the rabbitmq channel
+ * @return {amqp.Channel} rabbitmq channel
+ * @throws Error: if no channel is defined
+ */
 const getChannel = (): amqp.Channel => {
-    if (!channel) {
+    if (isUndefined(channel)) {
         throw new Error('No channel set for RabbitMQ');
     }
     return channel;

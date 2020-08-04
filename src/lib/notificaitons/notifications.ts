@@ -5,6 +5,7 @@ import { UpdateWriteOpResult } from 'mongodb';
  * @description fetches the relevant up to date unsubscribed list from the database
  * @param {string} region region that relates to the data
  * @return {Promise<Array<string>>} A Promise that resolves to an array of strings
+ * @throws Error: if no document is found
  */
 const getUnsubList = async (region: string): Promise<Array<string>> => {
     const doc = await Collections.Notifications().findOne({ region });
@@ -18,6 +19,7 @@ const getUnsubList = async (region: string): Promise<Array<string>> => {
  * @description fetches the relevant up to date subscribed list from the database
  * @param {string} region region that relates to the data
  * @return {Promise<Array<string>>} A Promise that resolves to an array of strings
+ * @throws Error: if no document is found
  */
 const getSubList = async (region: string): Promise<Array<string>> => {
     const doc = await Collections.Notifications().findOne({ region });
@@ -88,6 +90,7 @@ const removeFromSubList = async (
  * @param {string} email email to be added to the list
  * @param {string} region region that relates to the data
  * @return {Promise<boolean>} Promise that resolves to a boolean
+ * @throws Error: if no document is found
  */
 const isSubscribed = async (
     email: string,
@@ -108,6 +111,7 @@ const isSubscribed = async (
  * @param {string} email email to be added to the list
  * @param {string} region region that relates to the data
  * @return {Promise<boolean>} Promise that resolves to a boolean
+ * @throws Error: if no document is found
  */
 const isUnsubscribed = async (
     email: string,
