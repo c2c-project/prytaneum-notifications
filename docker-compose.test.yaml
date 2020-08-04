@@ -22,6 +22,6 @@ services:
         ports:
             - '3001:27017'
     # mongo-seed:
-    #     build: ./mongo-seed
+    #     build: ./seed
     #     links:
     #         - mongo
