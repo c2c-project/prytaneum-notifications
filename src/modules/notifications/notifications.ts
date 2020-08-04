@@ -15,9 +15,10 @@ const notifyMany = async (
         throw new Error('Empty subscribe list');
     }
     const results: Array<Promise<string | Mailgun.messages.SendResponse>> = [];
-    while (subList.length) {
+    const subsetSize = 999;
+    for (let i = 0; i < subList.length; i += subsetSize) {
         // Take max of 1k emails to send for each mailgun batch
-        const emails = subList.splice(0, 1000);
+        const emails = subList.slice(i, i + subsetSize);
         // TODO Figure out what should be sent for notification
         const recipientVariables = '';
         const notificationString = 'Test Notification';
