@@ -1,6 +1,7 @@
-import Notify from './notificaitons';
+import faker from 'faker';
+import Notify from './notifications';
 
-const subList = ['test@example.com'];
+const subList = [faker.internet.email()];
 const deliveryTime = new Date();
 
 describe('Notifications Module', () => {

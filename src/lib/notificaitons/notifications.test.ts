@@ -1,10 +1,11 @@
+import faker from 'faker';
 import Collections, { connect, close, NotificationDoc } from 'db';
 import { ObjectId } from 'mongodb';
 import Notifications from './notifications';
 
 const _id: ObjectId = new ObjectId();
-const testUnsubscribeList = ['unsubscribed@example.com'];
-const testSubscribeList = ['subscribed@example.com'];
+const testUnsubscribeList = [faker.internet.email(), faker.internet.email()];
+const testSubscribeList = [faker.internet.email(), faker.internet.email()];
 const testRegion = 'test2';
 const testDoc: NotificationDoc = {
     _id,
@@ -40,7 +41,7 @@ describe('Notifications Mongo', () => {
         describe('addToSubList', () => {
             it('should accept valid email and region', async () => {
                 const result = await Notifications.addToSubList(
-                    'test1@user.com',
+                    faker.internet.email(),
                     testRegion
                 );
                 expect(result).toBeDefined();
@@ -50,7 +51,7 @@ describe('Notifications Mongo', () => {
             });
             it('should not modify an invalid region', async () => {
                 const result = await Notifications.addToSubList(
-                    'test2@user.com',
+                    faker.internet.email(),
                     'invalid'
                 );
                 expect(result).toBeDefined();
@@ -62,7 +63,7 @@ describe('Notifications Mongo', () => {
         describe('removeFromSubList', () => {
             it('should accept valid email and region', async () => {
                 const result = await Notifications.removeFromSubList(
-                    'test1@user.com',
+                    testSubscribeList[1],
                     testRegion
                 );
                 expect(result).toBeDefined();
@@ -72,7 +73,7 @@ describe('Notifications Mongo', () => {
             });
             it('should not modify an invalid region', async () => {
                 const result = await Notifications.removeFromSubList(
-                    'test2@user.com',
+                    faker.internet.email(),
                     'invalid'
                 );
                 expect(result).toBeDefined();
@@ -84,14 +85,14 @@ describe('Notifications Mongo', () => {
         describe('isSubscribed', () => {
             it('should find subscribed user', async () => {
                 const isSubscribed = await Notifications.isSubscribed(
-                    'subscribed@example.com',
+                    testSubscribeList[0],
                     testRegion
                 );
                 expect(isSubscribed).toBeTruthy();
             });
             it('should not find a non-subscribed user', async () => {
                 const isSubscribed = await Notifications.isSubscribed(
-                    'unsubscribed@example.com',
+                    testUnsubscribeList[0],
                     testRegion
                 );
                 expect(isSubscribed).toBeFalsy();
@@ -99,7 +100,7 @@ describe('Notifications Mongo', () => {
             it('should throw error if given an invalid region', async () => {
                 await expect(
                     Notifications.isSubscribed(
-                        'subscribed@example.com',
+                        faker.internet.email(),
                         'invalid'
                     )
                 ).rejects.toThrowError('Error finding region document');
@@ -122,7 +123,7 @@ describe('Notifications Mongo', () => {
         describe('addToUnsubList', () => {
             it('should accept valid email and region', async () => {
                 const result = await Notifications.addToUnsubList(
-                    'test1@user.com',
+                    faker.internet.email(),
                     testRegion
                 );
                 expect(result).toBeDefined();
@@ -132,7 +133,7 @@ describe('Notifications Mongo', () => {
             });
             it('should not modify an invalid region', async () => {
                 const result = await Notifications.addToUnsubList(
-                    'test2@user.com',
+                    faker.internet.email(),
                     'invalid'
                 );
                 expect(result).toBeDefined();
@@ -144,7 +145,7 @@ describe('Notifications Mongo', () => {
         describe('removeFromUnsubList', () => {
             it('should accept valid email and region', async () => {
                 const result = await Notifications.removeFromUnsubList(
-                    'test1@user.com',
+                    testUnsubscribeList[1],
                     testRegion
                 );
                 expect(result).toBeDefined();
@@ -154,7 +155,7 @@ describe('Notifications Mongo', () => {
             });
             it('should not modify an invalid region', async () => {
                 const result = await Notifications.removeFromUnsubList(
-                    'test2@user.com',
+                    faker.internet.email(),
                     'invalid'
                 );
                 expect(result).toBeDefined();
@@ -166,14 +167,14 @@ describe('Notifications Mongo', () => {
         describe('isUnsubscribed', () => {
             it('should find subscribed user', async () => {
                 const isUnsubscribed = await Notifications.isUnsubscribed(
-                    'unsubscribed@example.com',
+                    testUnsubscribeList[0],
                     testRegion
                 );
                 expect(isUnsubscribed).toBeTruthy();
             });
             it('should not find a non-subscribed user', async () => {
                 const isUnsubscribed = await Notifications.isUnsubscribed(
-                    'subscribed@example.com',
+                    testSubscribeList[0],
                     testRegion
                 );
                 expect(isUnsubscribed).toBeFalsy();
@@ -181,7 +182,7 @@ describe('Notifications Mongo', () => {
             it('should throw error if given an invalid region', async () => {
                 await expect(
                     Notifications.isUnsubscribed(
-                        'unsubscribed@example.com',
+                        faker.internet.email(),
                         'invalid'
                     )
                 ).rejects.toThrowError('Error finding region document');
