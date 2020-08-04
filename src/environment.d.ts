@@ -4,6 +4,7 @@ declare global {
             NODE_ENV?: 'development' | 'production' | 'test';
             PORT?: string;
             ORIGIN?: string;
+            CORS_ORIGIN?: string;
             DB_URL?: string;
             AMQP_URL?: string;
             JWT_SECRET?: string;
