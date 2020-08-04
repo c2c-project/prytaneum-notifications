@@ -14,6 +14,7 @@ export interface notifiationConsumerData {
 const MS_IN_SEC = 1000;
 const SEC_IN_MIN = 60;
 const DELAY_INTERVAL_MINS = 10 * SEC_IN_MIN * MS_IN_SEC; // Every 10 mins
+const RETRY_DELAY = 10000; // 10 seconds
 
 const delay = (duration: number) =>
     new Promise((resolve) => setTimeout(resolve, duration));
@@ -24,6 +25,7 @@ const delay = (duration: number) =>
  */
 const notificationConsumer = async (): Promise<void> => {
     try {
+        logger.print('Running Notification Consumer');
         const queue = 'notifications';
         const channel = Rabbitmq.getChannel();
         await channel.assertQueue(queue);
@@ -34,7 +36,6 @@ const notificationConsumer = async (): Promise<void> => {
                 channel.ack(msg);
             }
         });
-        logger.print(notifications.toString());
         const results: Array<Promise<
             Array<string | Mailgun.messages.SendResponse>
         >> = [];
@@ -51,7 +52,9 @@ const notificationConsumer = async (): Promise<void> => {
         await notificationConsumer();
     } catch (e) {
         logger.err(e);
-        throw new Error('Problem with notification consumer');
+        // Retry connection
+        await delay(RETRY_DELAY);
+        await notificationConsumer();
     }
 };
 

@@ -4,6 +4,7 @@ import env from 'config/env';
 import Net from 'lib/net/net';
 import Rabbitmq from 'lib/rabbitmq';
 import log from '../lib/net/log';
+import notificationConsumer from '../lib/jobs/notifications';
 
 async function makeServer() {
     try {
@@ -11,9 +12,13 @@ async function makeServer() {
             Sets up the retry functions that should auto-restart 
         */
         log.initStatus(['rabbitmq']);
-        const netOptions = { key: 'rabbitmq' };
-        const rabbitmqConnect = Net.buildRetryFn(Rabbitmq.connect, netOptions);
+        // RabbitMQ
+        const rabbitmqConnect = Net.buildRetryFn(Rabbitmq.connect, {
+            key: 'rabbitmq',
+        });
         await rabbitmqConnect();
+        // Start notification Consumer
+        await notificationConsumer(); // TODO Convert to retryFunction
         /* 
             this is so that we can guarantee we are connected to the db
             before the server exposes itself on a port
