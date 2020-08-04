@@ -5,8 +5,6 @@ import { ClientError } from 'lib/errors';
 import Notifications from '../lib/notificaitons';
 import Invite from '../modules/invite';
 import Subscribe from '../modules/subscribe';
-
-import env from '../config/env';
 import logger from '../lib/logger';
 
 const router = express.Router();
@@ -30,16 +28,12 @@ export interface InviteManyData {
 router.post('/invite', (req, res, next) => {
     try {
         // Get headers and ensure they are all defined & that deliveryTime is valid
-        const MoC = req.headers.moc as string | undefined;
-        const topic = req.headers.topic as string | undefined;
-        const eventDateTime = req.headers.eventdatetime as string | undefined;
-        const constituentScope = req.headers.constituentscope as
-            | string
-            | undefined;
-        const region = req.headers.region as string | undefined;
-        const deliveryTimeHeader = req.headers.deliverytime as
-            | string
-            | undefined;
+        const MoC = req.headers?.moc;
+        const topic = req.headers?.topic;
+        const eventDateTime = req.headers?.eventdatetime;
+        const constituentScope = req.headers?.constituentscope;
+        const region = req.headers?.region;
+        const deliveryTimeHeader = req.headers?.deliverytime;
         if (
             MoC === undefined ||
             topic === undefined ||
@@ -48,22 +42,10 @@ router.post('/invite', (req, res, next) => {
             region === undefined
         )
             throw new ClientError('Undefined Header Data');
-        // Check deliveryTime
-        let deliveryTime: Date;
-        if (deliveryTimeHeader === undefined) {
-            // Deliver right away by default if no deliveryTime is given
-            deliveryTime = new Date(Date.now());
-            if (env.NODE_ENV === 'test') {
-                res.status(200).send(deliveryTime.toISOString());
-                return;
-            }
-        } else if (Number.isNaN(Date.parse(deliveryTimeHeader))) {
-            // Check if the ISO format is valid by parsing string, returns NaN if invalid
-            throw new ClientError('Invalid ISO Date format');
-        } else {
-            // Delivery time is set to the time given
-            deliveryTime = new Date(deliveryTimeHeader);
-        }
+        // Validate Delivery Time
+        const deliveryTime: Date = Invite.validateDeliveryTime(
+            deliveryTimeHeader
+        );
         // Construct csvString from stream buffer
         let csvString = '';
         req.on('data', (data) => {
@@ -86,8 +68,7 @@ router.post('/invite', (req, res, next) => {
                         }
                     );
                     if (filteredInviteeList.length === 0) {
-                        res.status(400).send('No valid invitees');
-                        // throw new ClientError('No valid invitees') // TODO FIX
+                        throw new ClientError('No valid invitees');
                     }
                     const results = await Invite.inviteMany(
                         filteredInviteeList,
@@ -101,6 +82,7 @@ router.post('/invite', (req, res, next) => {
                     res.status(200).send();
                 } catch (e) {
                     logger.err(e);
+                    next(e);
                 }
             }
             // eslint-disable-next-line no-void
@@ -121,15 +103,14 @@ router.post('/subscribe', async (req, res, next) => {
     try {
         const data = req.body as SubscribeData;
         if (data.email === undefined || data.region === undefined) {
-            throw new ClientError('Invalid Data');
+            throw new ClientError('Invalid Body');
         }
         const isSubscribed = await Notifications.isSubscribed(
             data.email,
             data.region
         );
         if (isSubscribed) {
-            res.status(400).send('Already subscribed');
-            // throw new ClientError('Already subscribed.'); // TODO FIX
+            throw new ClientError('Already subscribed.');
         }
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
@@ -152,15 +133,14 @@ router.post('/unsubscribe', async (req, res, next) => {
     try {
         const data = req.body as SubscribeData;
         if (data.email === undefined || data.region === undefined) {
-            throw new ClientError('Invalid Data');
+            throw new ClientError('Invalid Body');
         }
         const isUnsubscribed = await Notifications.isUnsubscribed(
             data.email,
             data.region
         );
         if (isUnsubscribed) {
-            res.status(400).send('Already unsubscribed');
-            // throw new ClientError('Already unsubscribed'); // TODO FIX
+            throw new ClientError('Already unsubscribed');
         }
         const isSubscribed = await Notifications.isSubscribed(
             data.email,

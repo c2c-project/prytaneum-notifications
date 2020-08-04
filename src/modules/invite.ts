@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { isUndefined } from 'util';
 
 import { InviteeData } from 'routes';
+import { ClientError } from 'lib/errors';
 import env from '../config/env';
 import Email from '../lib/emails/email';
 
@@ -93,9 +94,6 @@ interface RecipiantVariables {
 const generateRecipiantVariables = (
     inviteeList: Array<InviteeData>
 ): { emails: Array<string>; recipiantVariables: string } => {
-    if (inviteeList.length === 0) {
-        throw new Error('Empty invitee list');
-    }
     const emails = [];
     const recipiantVariables: RecipiantVariables = {};
     let invitee = inviteeList.pop();
@@ -117,7 +115,7 @@ const generateRecipiantVariables = (
  * @param {string} topic Topic for the Town Hall
  * @param {string} eventDateTime The event date and time
  * @param {string} constituentScope the constituent scope
- * @param {string} deliveryTime the date & time that the email should be sent out in ISO format
+ * @param {Date} deliveryTime the date & time that the email should be sent out as Date object
  * @return {Promise<Array<string | Mailgun.messages.SendResponse>>} promise that resolves to the mailgun email results in array
  */
 const inviteMany = async (
@@ -160,6 +158,24 @@ const inviteMany = async (
     return Promise.all(results);
 };
 
+const validateDeliveryTime = (
+    deliveryTimeHeader: string | string[] | undefined
+): Date => {
+    let deliveryTime: Date;
+    if (deliveryTimeHeader === undefined) {
+        // Deliver right away by default if no deliveryTime is given
+        deliveryTime = new Date(Date.now());
+    } else if (Number.isNaN(Date.parse(deliveryTimeHeader as string))) {
+        // Check if the ISO format is valid by parsing string, returns NaN if invalid
+        throw new ClientError('Invalid ISO Date format');
+    } else {
+        // Delivery time is set to the time given
+        deliveryTime = new Date(deliveryTimeHeader as string);
+    }
+    return deliveryTime;
+};
+
 export default {
     inviteMany,
+    validateDeliveryTime,
 };
