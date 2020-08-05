@@ -18,7 +18,10 @@ const notifyMany = async (
     const subsetSize = 999;
     for (let i = 0; i < subList.length; i += subsetSize) {
         // Take max of 1k emails to send for each mailgun batch
-        const emails = subList.slice(i, i + subsetSize);
+        const emails = subList.slice(
+            i,
+            Math.min(subList.length, i + subsetSize)
+        );
         // TODO Figure out what should be sent for notification
         const recipientVariables = '';
         const notificationString = 'Test Notification';

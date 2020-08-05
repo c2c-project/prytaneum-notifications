@@ -139,9 +139,12 @@ const inviteMany = async (
     const subject = 'Prytaneum Invite';
     // TODO Test with 1k invitees to handle Mailgun limit
     const subsetSize = 999;
-    for (let i = 0; i < inviteeList.length; i += subsetSize) {
+    for (let i = 0; i < inviteeList.length; i = subsetSize) {
         // Take max of 1k invitees and format to list of emails and string of recipiantVariables
-        const subset = inviteeList.slice(i, i + subsetSize);
+        const subset = inviteeList.slice(
+            i,
+            Math.min(inviteeList.length, i + subsetSize)
+        );
         const { emails, recipiantVariables } = generateRecipiantVariables(
             subset
         );
