@@ -9,4 +9,4 @@ export interface NotificationDoc {
 }
 
 export default (): Collection<NotificationDoc> =>
-    getCollection<NotificationDoc>('Notifications');
+    getCollection<NotificationDoc>('notifications');
