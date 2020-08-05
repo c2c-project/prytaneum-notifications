@@ -6,6 +6,6 @@
 	{
 		"region": "east_coast",
 		"unsubscribeList": ["ryan@example.com"],
-		"subscribeList": []
+		"subscribeList": ["raume@example.com"]
 	}
 ]
