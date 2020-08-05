@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/indent */
 import Mailgun from 'mailgun-js';
 import Rabbitmq from '../rabbitmq';
-import DB from '../notificaitons';
+import DB from '../notifications';
 import Notifications from '../../modules/notifications';
 import logger from '../logger';
 

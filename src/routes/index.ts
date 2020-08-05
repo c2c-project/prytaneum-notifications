@@ -2,7 +2,7 @@ import express from 'express';
 import Papa from 'papaparse';
 
 import { ClientError } from 'lib/errors';
-import Notifications from '../lib/notificaitons';
+import Notifications from '../lib/notifications';
 import Invite from '../modules/invite';
 import Subscribe from '../modules/subscribe';
 import logger from '../lib/logger';

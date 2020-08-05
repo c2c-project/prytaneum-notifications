@@ -3,7 +3,7 @@ import faker from 'faker';
 import app from 'app';
 import Collections, { connect, close, NotificationDoc } from 'db';
 import { ObjectId } from 'mongodb';
-import Notifications from '../lib/notificaitons/notifications';
+import Notifications from '../lib/notifications/notifications';
 import { SubscribeData } from './index';
 import Subscribe from '../modules/subscribe';
 
