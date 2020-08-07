@@ -10,12 +10,6 @@ export interface notifiationConsumerData {
     notificationDateISO: string;
 }
 
-// TODO Figure out what time interval should be used for this
-const MS_IN_SEC = 1000;
-const SEC_IN_MIN = 60;
-const DELAY_INTERVAL_MINS = 10 * SEC_IN_MIN * MS_IN_SEC; // Every 10 mins
-const RETRY_DELAY = 10000; // 10 seconds
-
 const delay = (duration: number) =>
     new Promise((resolve) => setTimeout(resolve, duration));
 
@@ -48,13 +42,8 @@ const notificationConsumer = async (): Promise<void> => {
             results.push(Notifications.notifyMany(subList, date));
         }
         await Promise.all(results);
-        await delay(DELAY_INTERVAL_MINS);
-        await notificationConsumer();
     } catch (e) {
         logger.err(e);
-        // Retry connection
-        await delay(RETRY_DELAY);
-        await notificationConsumer();
     }
 };
 
