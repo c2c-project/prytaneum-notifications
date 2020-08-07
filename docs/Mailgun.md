@@ -1,5 +1,7 @@
 # Mailgun API restrictuions
 
+## Specific delivery time must not be farther than 3 days from now
+
 ## Foundation 50k
 
 - Cost: \$35/month
