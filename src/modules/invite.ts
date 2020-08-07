@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/indent */
 import Mailgun from 'mailgun-js';
 import jwt from 'jsonwebtoken';
-import { isUndefined } from 'util';
 
 import { InviteeData } from 'routes';
 import { ClientError } from 'lib/errors';
@@ -44,7 +43,11 @@ const getInviteString = ({
     `;
 };
 
-// Create function to add the unsub link to end of email message
+/**
+ * @description Adds unsub link to a message with newline
+ * @param {string} message Message body
+ * @param {string} unsubLink the unsubscribe link
+ */
 const addUnsubLink = (message: string, unsubLink: string): string => {
     const updatedMessage = `${message}\n${unsubLink}`;
     return updatedMessage;
@@ -71,7 +74,6 @@ const generateInviteLink = (email: string): string => {
  * @return {string} link string
  */
 const generateUnsubscribeLink = (email: string): string => {
-    // const uuid = uuidv5(email, uuidv5.URL);
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
         expiresIn: '7d',
@@ -95,14 +97,12 @@ const generateRecipiantVariables = (
 ): { emails: Array<string>; recipiantVariables: string } => {
     const emails = [];
     const recipiantVariables: RecipiantVariables = {};
-    let invitee = inviteeList.pop();
-    while (!isUndefined(invitee)) {
-        const { fName, email } = invitee;
+    for (let i = 0; i < inviteeList.length; i += 1) {
+        const { fName, email } = inviteeList[i];
         const inviteLink = generateInviteLink(email);
         const unsubLink = generateUnsubscribeLink(email);
         recipiantVariables[email] = { fName, inviteLink, unsubLink };
         emails.push(email);
-        invitee = inviteeList.pop();
     }
     return { emails, recipiantVariables: JSON.stringify(recipiantVariables) };
 };
@@ -139,7 +139,7 @@ const inviteMany = async (
     const subject = 'Prytaneum Invite';
     // TODO Test with 1k invitees to handle Mailgun limit
     const subsetSize = 999;
-    for (let i = 0; i < inviteeList.length; i = subsetSize) {
+    for (let i = 0; i < inviteeList.length; i += subsetSize) {
         // Take max of 1k invitees and format to list of emails and string of recipiantVariables
         const subset = inviteeList.slice(
             i,
