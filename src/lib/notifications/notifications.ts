@@ -1,5 +1,6 @@
 import Collections from 'db';
 import { UpdateWriteOpResult } from 'mongodb';
+import { MetaData } from 'db/notifications';
 
 /**
  * @description fetches the relevant up to date unsubscribed list from the database
@@ -125,6 +126,20 @@ const isUnsubscribed = async (
     return unsubscribeList.includes(email);
 };
 
+/**
+ * @description adds invite metadata to invite history
+ * @param {MetaData} metadata  invite metadata
+ * @param {string} region region region that relates to the data
+ * @returns {Promise<UpdateWriteOpResult>}
+ */
+const addToInviteHistory = async (
+    metadata: MetaData,
+    region: string
+): Promise<UpdateWriteOpResult> => {
+    const query = { $addToSet: { inviteHistory: metadata } };
+    return Collections.Notifications().updateOne({ region }, query);
+};
+
 export default {
     getUnsubList,
     getSubList,
@@ -134,4 +149,5 @@ export default {
     removeFromSubList,
     isSubscribed,
     isUnsubscribed,
+    addToInviteHistory,
 };
