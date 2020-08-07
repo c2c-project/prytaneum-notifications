@@ -22,6 +22,7 @@ export default function (app: Express): void {
                 'constituentscope',
                 'region',
                 'deliverytime',
+                'metadata',
             ],
         })
     );
