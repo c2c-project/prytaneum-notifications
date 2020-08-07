@@ -1,9 +1,11 @@
+import scheule from 'node-schedule';
 import app from 'app';
 import { connect } from 'db';
 import env from 'config/env';
 import Net from 'lib/net/net';
 import Rabbitmq from 'lib/rabbitmq';
 import log from '../lib/net/log';
+import logger from '../lib/logger';
 import notificationConsumer from '../lib/jobs/notifications';
 
 async function makeServer() {
@@ -18,19 +20,23 @@ async function makeServer() {
         });
         await rabbitmqConnect();
         // Start notification Consumer
-        await notificationConsumer(); // TODO Convert to retryFunction
+        const notificationJob = scheule.scheduleJob(
+            '0 */30 * * * *', // Every 30 minuites
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            async () => {
+                await notificationConsumer();
+            }
+        );
         /* 
             this is so that we can guarantee we are connected to the db
             before the server exposes itself on a port
         */
         await connect();
         app.listen(Number(env.PORT), env.ORIGIN);
-        console.log(`http://${env.ORIGIN}:${env.PORT}`);
+        logger.print(`http://${env.ORIGIN}:${env.PORT}`);
     } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
-        // eslint-disable-next-line no-console
-        console.log('Exiting...');
+        logger.err(e);
+        logger.print('Exiting...');
     }
 }
 
