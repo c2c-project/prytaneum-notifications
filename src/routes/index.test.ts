@@ -2,6 +2,7 @@ import request from 'supertest';
 import faker from 'faker';
 import app from 'app';
 import Collections, { connect, close, NotificationDoc } from 'db';
+import { MetaData } from 'db/notifications';
 import { ObjectId } from 'mongodb';
 import Notifications from '../lib/notifications/notifications';
 import { SubscribeData } from './index';
@@ -15,6 +16,12 @@ const testMoC = faker.name.firstName();
 const testTopic = 'Technology';
 const testEventDateTime = faker.date.future().toUTCString();
 const testConstituentScope = 'state';
+const testMetadata: MetaData = {
+    name: 'filename',
+    lastModified: new Date().toISOString(),
+    size: 500, // Size in bytes
+    sentDateTime: new Date().toISOString(),
+};
 
 const _id: ObjectId = new ObjectId();
 const testUnsubscribeList: Array<string> = [
@@ -32,6 +39,7 @@ const testDoc: NotificationDoc = {
     unsubscribeList: testUnsubscribeList,
     subscribeList: testSubscribeList,
     region,
+    inviteHistory: [testMetadata],
 };
 
 beforeAll(async () => {
@@ -61,6 +69,7 @@ describe('index', () => {
                 .set('constituentscope', testConstituentScope)
                 .set('deliverytime', validDeliveryTime.toISOString())
                 .set('region', region)
+                .set('metadata', JSON.stringify(testMetadata))
                 .set('Content-Type', 'text/csv')
                 .send(testCSV);
             expect(status).toStrictEqual(200);
@@ -74,6 +83,7 @@ describe('index', () => {
                 .set('constituentscope', testConstituentScope)
                 .set('deliverytime', validDeliveryTime.toISOString())
                 .set('region', region)
+                .set('metadata', JSON.stringify(testMetadata))
                 .set('Content-Type', 'text/csv')
                 .send(testCSV);
             expect(status).toStrictEqual(204);
@@ -87,6 +97,7 @@ describe('index', () => {
                 .set('constituentscope', testConstituentScope)
                 .set('deliverytime', validDeliveryTime.toISOString())
                 .set('region', region)
+                .set('metadata', JSON.stringify(testMetadata))
                 .set('Content-Type', 'text/csv')
                 .send(testCSV);
             expect(status).toStrictEqual(200);
@@ -99,6 +110,7 @@ describe('index', () => {
                 .set('eventdatetime', testEventDateTime)
                 .set('constituentscope', testConstituentScope)
                 .set('region', region)
+                .set('metadata', JSON.stringify(testMetadata))
                 .set('Content-Type', 'text/csv')
                 .send(testCSV);
             expect(status).toStrictEqual(200);
@@ -112,6 +124,7 @@ describe('index', () => {
                 .set('constituentscope', testConstituentScope)
                 .set('deliverytime', 'invalid')
                 .set('region', region)
+                .set('metadata', JSON.stringify(testMetadata))
                 .set('Content-Type', 'text/csv')
                 .send(testCSV);
             expect(status).toStrictEqual(400);
@@ -131,6 +144,7 @@ describe('index', () => {
                 .set('constituentscope', testConstituentScope)
                 .set('deliverytime', validDeliveryTime.toISOString())
                 .set('region', region)
+                .set('metadata', JSON.stringify(testMetadata))
                 .set('Content-Type', 'text/csv')
                 .send(testUnsubCSV);
             expect(status).toStrictEqual(400);

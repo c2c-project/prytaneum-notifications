@@ -2,6 +2,7 @@ import express from 'express';
 import Papa from 'papaparse';
 
 import { ClientError } from 'lib/errors';
+import { MetaData } from 'db/notifications';
 import Notifications from '../lib/notifications';
 import Invite from '../modules/invite';
 import Subscribe from '../modules/subscribe';
@@ -33,13 +34,15 @@ router.post('/invite', (req, res, next) => {
         const eventDateTime = req.headers?.eventdatetime;
         const constituentScope = req.headers?.constituentscope;
         const region = req.headers?.region;
+        const rawmetadata = req.headers?.metadata;
         const deliveryTimeHeader = req.headers?.deliverytime;
         if (
             MoC === undefined ||
             topic === undefined ||
             eventDateTime === undefined ||
             constituentScope === undefined ||
-            region === undefined
+            region === undefined ||
+            rawmetadata === undefined
         )
             throw new ClientError('Undefined Header Data');
         // Validate Delivery Time
@@ -77,6 +80,15 @@ router.post('/invite', (req, res, next) => {
                         eventDateTime as string,
                         constituentScope as string,
                         deliveryTime
+                    );
+                    // Parse metadata
+                    const metadata = JSON.parse(
+                        rawmetadata as string
+                    ) as MetaData;
+                    metadata.sentDateTime = new Date().toUTCString();
+                    await Notifications.addToInviteHistory(
+                        metadata,
+                        region as string
                     );
                     logger.print(JSON.stringify(results));
                     res.status(200).send();
