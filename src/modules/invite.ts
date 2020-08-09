@@ -1,11 +1,30 @@
 /* eslint-disable @typescript-eslint/indent */
 import Mailgun from 'mailgun-js';
 import jwt from 'jsonwebtoken';
+import Papa from 'papaparse';
+import { UpdateWriteOpResult } from 'mongodb';
 
-import { InviteeData } from 'routes';
+import { MetaData } from 'db/notifications';
 import { ClientError } from 'lib/errors';
-import env from '../config/env';
+import Notifications from '../lib/notifications';
 import Email from '../lib/emails/email';
+import env from '../config/env';
+
+export interface InviteeData {
+    email: string;
+    fName: string;
+    lName: string;
+}
+
+export interface InviteData {
+    MoC: string;
+    topic: string;
+    eventDateTime: string;
+    constituentScope: string;
+    region: string;
+    deliveryTimeString?: string; // ISO/UTC format
+    deliveryTime: Date;
+}
 
 export interface InviteEmailParams {
     MoC: string;
@@ -161,30 +180,82 @@ const inviteMany = async (
     return Promise.all(results);
 };
 
+const validateData = (data: InviteData): void => {
+    if (
+        data.MoC === undefined ||
+        data.topic === undefined ||
+        data.eventDateTime === undefined ||
+        data.constituentScope === undefined ||
+        data.region === undefined
+    )
+        throw new ClientError('Undefined data');
+};
+
 /**
  * @description Valides a given delivery time header
- * @param {string | Array<string> | undefined} deliveryTimeHeader delivery time taken from header
+ * @param {string | undefined} deliveryTimeString delivery time taken from header
  * @returns {Date} Given date as Date object if defined. Defaults to current Date object if undefined.
  * @throws ClientError: If a given string is defined but invalid throws a formatting error
  */
-const validateDeliveryTime = (
-    deliveryTimeHeader: string | Array<string> | undefined
-): Date => {
+const validateDeliveryTime = (deliveryTimeString: string | undefined): Date => {
     let deliveryTime: Date;
-    if (deliveryTimeHeader === undefined) {
+    if (deliveryTimeString === undefined) {
         // Deliver right away by default if no deliveryTime is given
         deliveryTime = new Date(Date.now());
-    } else if (Number.isNaN(Date.parse(deliveryTimeHeader as string))) {
+    } else if (Number.isNaN(Date.parse(deliveryTimeString))) {
         // Check if the ISO format is valid by parsing string, returns NaN if invalid
         throw new ClientError('Invalid ISO Date format');
     } else {
         // Delivery time is set to the time given
-        deliveryTime = new Date(deliveryTimeHeader as string);
+        deliveryTime = new Date(deliveryTimeString);
     }
     return deliveryTime;
+};
+
+const inviteCSVList = async (
+    csvString: string,
+    data: InviteData
+): Promise<Array<string | Mailgun.messages.SendResponse>> => {
+    const result = Papa.parse(csvString, {
+        header: true,
+    });
+    const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
+    const unsubSet = new Set(
+        await Notifications.getUnsubList(data.region) // Checked if undefined earlier
+    );
+    const filteredInviteeList = inviteeList.filter((item: InviteeData) => {
+        return !unsubSet.has(item.email);
+    });
+    if (filteredInviteeList.length === 0) {
+        throw new ClientError('No valid invitees');
+    }
+    return inviteMany(
+        filteredInviteeList,
+        data.MoC, // Checked if undefined earlier
+        data.topic,
+        data.eventDateTime,
+        data.constituentScope,
+        data.deliveryTime
+    );
+};
+
+const addInviteHistory = (
+    file: Express.Multer.File,
+    region: string
+): Promise<UpdateWriteOpResult> => {
+    // Parse metadata
+    const metadata: MetaData = {
+        name: file.originalname,
+        size: file.size, // Size in bytes
+        sentDateTime: new Date().toUTCString(),
+    };
+    return Notifications.addToInviteHistory(metadata, region);
 };
 
 export default {
     inviteMany,
     validateDeliveryTime,
+    inviteCSVList,
+    addInviteHistory,
+    validateData,
 };

@@ -1,24 +1,23 @@
+/* eslint-disable no-console */
 import request from 'supertest';
+import fs from 'fs';
+import path from 'path';
 import faker from 'faker';
+import Papa from 'papaparse';
+
 import app from 'app';
 import Collections, { connect, close, NotificationDoc } from 'db';
 import { MetaData } from 'db/notifications';
 import { ObjectId } from 'mongodb';
 import Notifications from '../lib/notifications/notifications';
-import { SubscribeData } from './index';
-import Subscribe from '../modules/subscribe';
+import Subscribe, { SubscribeData } from '../modules/subscribe';
 
-const testCSV = [
-    'email,fName,lName',
-    `${faker.internet.email()},${faker.name.firstName()},${faker.name.lastName()}`,
-].join('\n');
 const testMoC = faker.name.firstName();
 const testTopic = 'Technology';
 const testEventDateTime = faker.date.future().toUTCString();
 const testConstituentScope = 'state';
 const testMetadata: MetaData = {
     name: 'filename',
-    lastModified: new Date().toISOString(),
     size: 500, // Size in bytes
     sentDateTime: new Date().toISOString(),
 };
@@ -29,10 +28,12 @@ const testUnsubscribeList: Array<string> = [
     faker.internet.email(),
     faker.internet.email(),
 ];
+
 const testSubscribeList: Array<string> = [
     faker.internet.email(),
     faker.internet.email(),
 ];
+
 const region = 'test';
 const testDoc: NotificationDoc = {
     _id,
@@ -42,9 +43,43 @@ const testDoc: NotificationDoc = {
     inviteHistory: [testMetadata],
 };
 
+const testCSVData = [
+    {
+        email: faker.internet.email(),
+        fName: faker.name.firstName(),
+        lName: faker.name.lastName(),
+    },
+    {
+        email: faker.internet.email(),
+        fName: faker.name.firstName(),
+        lName: faker.name.lastName(),
+    },
+];
+const testCSVDataString = Papa.unparse(testCSVData);
+const testUnsubCSVData = {
+    email: testUnsubscribeList[0],
+    fName: faker.name.firstName(),
+    lName: faker.name.lastName(),
+};
+const testUnsubCSVString = Papa.unparse([testUnsubCSVData]);
+
 beforeAll(async () => {
     await connect();
     await Collections.Notifications().insertOne(testDoc);
+    fs.writeFile(
+        path.join(__dirname, 'testFiles/test.csv'),
+        testCSVDataString,
+        (err) => {
+            if (err) console.error(err);
+        }
+    );
+    fs.writeFile(
+        path.join(__dirname, '/testFiles/testUnsub.csv'),
+        testUnsubCSVString,
+        (err) => {
+            if (err) console.error(err);
+        }
+    );
 });
 
 afterAll(async () => {
@@ -60,93 +95,122 @@ const validDeliveryTime = new Date();
 
 describe('index', () => {
     describe('#invite', () => {
-        it('should accept valid data', async () => {
-            const { status } = await request(app)
-                .post('/invite')
-                .set('moc', testMoC)
-                .set('topic', testTopic)
-                .set('eventdatetime', testEventDateTime)
-                .set('constituentscope', testConstituentScope)
-                .set('deliverytime', validDeliveryTime.toISOString())
-                .set('region', region)
-                .set('metadata', JSON.stringify(testMetadata))
-                .set('Content-Type', 'text/csv')
-                .send(testCSV);
-            expect(status).toStrictEqual(200);
-        });
         it('should accept options with cors', async () => {
             const { status } = await request(app)
                 .options('/invite')
-                .set('moc', testMoC)
-                .set('topic', testTopic)
-                .set('eventdatetime', testEventDateTime)
-                .set('constituentscope', testConstituentScope)
-                .set('deliverytime', validDeliveryTime.toISOString())
-                .set('region', region)
-                .set('metadata', JSON.stringify(testMetadata))
-                .set('Content-Type', 'text/csv')
-                .send(testCSV);
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', validDeliveryTime.toISOString())
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/test.csv')
+                    )
+                );
             expect(status).toStrictEqual(204);
+        });
+        it('should accept valid data', async () => {
+            const { status } = await request(app)
+                .post('/invite')
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', validDeliveryTime.toISOString())
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/test.csv')
+                    )
+                );
+            expect(status).toStrictEqual(200);
         });
         it('should accept valid deliveryTime', async () => {
             const { status } = await request(app)
                 .post('/invite')
-                .set('moc', testMoC)
-                .set('topic', testTopic)
-                .set('eventdatetime', testEventDateTime)
-                .set('constituentscope', testConstituentScope)
-                .set('deliverytime', validDeliveryTime.toISOString())
-                .set('region', region)
-                .set('metadata', JSON.stringify(testMetadata))
-                .set('Content-Type', 'text/csv')
-                .send(testCSV);
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', validDeliveryTime.toISOString())
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/test.csv')
+                    )
+                );
             expect(status).toStrictEqual(200);
         });
         it('should accept undefined deliveryTime & replace with valid deliveryTime', async () => {
             const { status } = await request(app)
                 .post('/invite')
-                .set('moc', testMoC)
-                .set('topic', testTopic)
-                .set('eventdatetime', testEventDateTime)
-                .set('constituentscope', testConstituentScope)
-                .set('region', region)
-                .set('metadata', JSON.stringify(testMetadata))
-                .set('Content-Type', 'text/csv')
-                .send(testCSV);
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/test.csv')
+                    )
+                );
             expect(status).toStrictEqual(200);
         });
         it('should reject invalid deliveryTime', async () => {
             const { status } = await request(app)
                 .post('/invite')
-                .set('moc', testMoC)
-                .set('topic', testTopic)
-                .set('eventdatetime', testEventDateTime)
-                .set('constituentscope', testConstituentScope)
-                .set('deliverytime', 'invalid')
-                .set('region', region)
-                .set('metadata', JSON.stringify(testMetadata))
-                .set('Content-Type', 'text/csv')
-                .send(testCSV);
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', 'invalid')
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/test.csv')
+                    )
+                );
             expect(status).toStrictEqual(400);
         });
         it('should remove unsubscribed user from list', async () => {
-            const testUnsubCSV = [
-                'email,fName,lName',
-                `${
-                    testUnsubscribeList[0]
-                },${faker.name.firstName()},${faker.name.lastName()}`,
-            ].join('\n');
             const { status } = await request(app)
                 .post('/invite')
-                .set('moc', testMoC)
-                .set('topic', testTopic)
-                .set('eventdatetime', testEventDateTime)
-                .set('constituentscope', testConstituentScope)
-                .set('deliverytime', validDeliveryTime.toISOString())
-                .set('region', region)
-                .set('metadata', JSON.stringify(testMetadata))
-                .set('Content-Type', 'text/csv')
-                .send(testUnsubCSV);
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', validDeliveryTime.toISOString())
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/testUnsub.csv')
+                    )
+                );
+            expect(status).toStrictEqual(400);
+        });
+        it('should reject invalid filetype', async () => {
+            const { status } = await request(app)
+                .post('/invite')
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', validDeliveryTime.toISOString())
+                .field('region', region)
+                .attach(
+                    'inviteFile',
+                    fs.createReadStream(
+                        path.join(__dirname, '/testFiles/test.txt')
+                    )
+                );
             expect(status).toStrictEqual(400);
         });
         it('should reject no data', async () => {

@@ -15,15 +15,6 @@ export default function (app: Express): void {
         // TODO Discuss better practice for Cors
         cors({
             origin: `${env.CORS_ORIGIN}`,
-            exposedHeaders: [
-                'moc',
-                'topic',
-                'eventdatetime',
-                'constituentscope',
-                'region',
-                'deliverytime',
-                'metadata',
-            ],
         })
     );
 }

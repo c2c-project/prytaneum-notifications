@@ -2,6 +2,11 @@
 import env from '../config/env';
 import Email from '../lib/emails/email';
 
+export interface SubscribeData {
+    email: string;
+    region: string;
+}
+
 /**
  * @description Adds an email to mailgun's unsubscribe list
  * @param {string} email of to be added to the unsubscribe list

@@ -3,7 +3,6 @@ import { getCollection } from './mongo';
 
 export interface MetaData {
     name: string;
-    lastModified: string; // UTC Format
     size: number; // Size in bytes
     sentDateTime: string; // UTC Format
 }

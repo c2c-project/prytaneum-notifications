@@ -1,115 +1,55 @@
 import express from 'express';
-import Papa from 'papaparse';
+import multer from 'multer';
 
 import { ClientError } from 'lib/errors';
-import { MetaData } from 'db/notifications';
 import Notifications from '../lib/notifications';
-import Invite from '../modules/invite';
-import Subscribe from '../modules/subscribe';
+import Invite, { InviteData } from '../modules/invite';
+import Subscribe, { SubscribeData } from '../modules/subscribe';
 import logger from '../lib/logger';
 
 const router = express.Router();
 
-export interface InviteeData {
-    email: string;
-    fName: string;
-    lName: string;
-}
+// Multer setup
+// eslint-disable-next-line @typescript-eslint/ban-types
+const fileFilter = (
+    req: unknown,
+    file: Express.Multer.File,
+    cb: multer.FileFilterCallback
+) => {
+    if (file.mimetype === 'text/csv') {
+        cb(null, true); // Accept
+    } else {
+        cb(null, false); // Reject
+    }
+};
 
-export interface InviteManyData {
-    inviteeList: Array<InviteeData>;
-    MoC: string;
-    topic: string;
-    eventDateTime: string;
-    constituentScope: string;
-    region: string;
-    deliveryTime?: string; // ISO format
-}
+// TODO Discuss storing locally or in memory
+const upload = multer({
+    limits: {
+        fileSize: 1024 * 1024 * 10, // 10 MB limit
+    },
+    fileFilter,
+});
 
-router.post('/invite', (req, res, next) => {
+router.post('/invite', upload.single('inviteFile'), async (req, res, next) => {
     try {
-        // Get headers and ensure they are all defined & that deliveryTime is valid
-        const MoC = req.headers?.moc;
-        const topic = req.headers?.topic;
-        const eventDateTime = req.headers?.eventdatetime;
-        const constituentScope = req.headers?.constituentscope;
-        const region = req.headers?.region;
-        const rawmetadata = req.headers?.metadata;
-        const deliveryTimeHeader = req.headers?.deliverytime;
-        if (
-            MoC === undefined ||
-            topic === undefined ||
-            eventDateTime === undefined ||
-            constituentScope === undefined ||
-            region === undefined ||
-            rawmetadata === undefined
-        )
-            throw new ClientError('Undefined Header Data');
-        // Validate Delivery Time
-        const deliveryTime: Date = Invite.validateDeliveryTime(
-            deliveryTimeHeader
+        if (!req.file) throw new ClientError('Invalid File'); // Check if file is undefined (rejected)
+        const data = req.body as InviteData;
+        Invite.validateData(data);
+        data.deliveryTime = Invite.validateDeliveryTime(
+            data.deliveryTimeString
         );
-        // Construct csvString from stream buffer
-        let csvString = '';
-        req.on('data', (data) => {
-            csvString += data;
-        });
-        req.on('end', () => {
-            async function invite() {
-                try {
-                    // Parse the csvString
-                    const result = Papa.parse(csvString, {
-                        header: true,
-                    });
-                    const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
-                    const unsubSet = new Set(
-                        await Notifications.getUnsubList(region as string) // Checked if undefined earlier
-                    );
-                    const filteredInviteeList = inviteeList.filter(
-                        (item: InviteeData) => {
-                            return !unsubSet.has(item.email);
-                        }
-                    );
-                    if (filteredInviteeList.length === 0) {
-                        throw new ClientError('No valid invitees');
-                    }
-                    const results = await Invite.inviteMany(
-                        filteredInviteeList,
-                        MoC as string, // Checked if undefined earlier
-                        topic as string,
-                        eventDateTime as string,
-                        constituentScope as string,
-                        deliveryTime
-                    );
-                    // Parse metadata
-                    const metadata = JSON.parse(
-                        rawmetadata as string
-                    ) as MetaData;
-                    metadata.sentDateTime = new Date().toUTCString();
-                    await Notifications.addToInviteHistory(
-                        metadata,
-                        region as string
-                    );
-                    logger.print(JSON.stringify(results));
-                    res.status(200).send();
-                } catch (e) {
-                    logger.err(e);
-                    next(e);
-                }
-            }
-            // eslint-disable-next-line no-void
-            void invite();
-        });
+        const csvString = req.file.buffer.toString();
+        const results = await Invite.inviteCSVList(csvString, data);
+        logger.print(JSON.stringify(results));
+        const opResult = await Invite.addInviteHistory(req.file, data.region);
+        logger.print(JSON.stringify(opResult));
+        res.status(200).send();
     } catch (e) {
         logger.err(e);
         next(e);
     }
 });
-
-export interface SubscribeData {
-    email: string;
-    region: string;
-}
 
 router.post('/subscribe', async (req, res, next) => {
     try {
