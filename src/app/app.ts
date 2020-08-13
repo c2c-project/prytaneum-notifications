@@ -3,6 +3,7 @@ import createError from 'http-errors';
 import config from 'config/app';
 import env from 'config/env';
 import routes from 'routes';
+import { errorHandler } from 'lib/errors';
 
 function initApp(): Express {
     const app = express();
@@ -14,7 +15,7 @@ function initApp(): Express {
     app.use((req, res, next) => {
         next(createError(404));
     });
-    // TODO: more robust error handling
+    app.use(errorHandler);
     return app;
 }
 

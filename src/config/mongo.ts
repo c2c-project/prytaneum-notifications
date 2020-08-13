@@ -1,5 +1,5 @@
 import env from './env';
 
-const dbName = 'prytaneum-notification';
+const dbName = 'notificationService';
 
 export default { dbName, url: env.DB_URL };

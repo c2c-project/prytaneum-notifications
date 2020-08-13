@@ -1,25 +1,27 @@
 version: '3.8'
 services:
-    service-base: # rename this to something like <yourservicename>-service
-        build: .
+    notification-service:
+        build:
+            context: .
+            target: BASE_IMAGE
         volumes:
             - ./src:/usr/app/src
         ports:
-            - '3000:3000'
+            - '3002:3002'
+        volumes:
+            - ./src:/usr/app/src
+            - ./package.json:/usr/app/package.json
+            - ./yarn.lock:/usr/app/yarn.lock
+            - ./.babelrc:/usr/app/.babelrc
+            - ./.env:/usr/app/.env
         command: yarn test
-        ###### uncomment below as appropriate
-        # depends_on:
-        #     - mongo
-        #     - postgresql
-        #     - rabbitmq
-        #     - redis
-    ###### uncomment the correponsing db's/services you need
-    # mongo:
-    #     image: mongo:4.2.8-bionic
-    # postgresql:
-    #     image: postgres:12.3
-    # redis:
-    #     image: redis:6.0.5
-    ###### uncomment if you need to use the internal pub/sub system
-    # rabbitmq:
-    #     image: rabbitmq:3.8.5
+        depends_on:
+            - mongo
+    mongo:
+        image: mongo:4.2.8-bionic
+        ports:
+            - '3001:27017'
+    # mongo-seed:
+    #     build: ./seed
+    #     links:
+    #         - mongo
