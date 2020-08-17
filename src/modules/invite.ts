@@ -157,7 +157,7 @@ const inviteMany = async (
     );
     const subject = 'Prytaneum Invite';
     // TODO Test with 1k invitees to handle Mailgun limit
-    const subsetSize = 999;
+    const subsetSize = 1000;
     for (let i = 0; i < inviteeList.length; i += subsetSize) {
         // Take max of 1k invitees and format to list of emails and string of recipiantVariables
         const subset = inviteeList.slice(
@@ -213,13 +213,13 @@ const validateDeliveryTime = (deliveryTimeString: string | undefined): Date => {
 };
 
 const inviteCSVList = async (
-    csvString: string,
+    inviteeList: Array<InviteeData>,
     data: InviteData
 ): Promise<Array<string | Mailgun.messages.SendResponse>> => {
-    const result = Papa.parse(csvString, {
-        header: true,
-    });
-    const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
+    // const result = Papa.parse(csvString, {
+    //     header: true,
+    // });
+    // const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
     const unsubSet = new Set(
         await Notifications.getUnsubList(data.region) // Checked if undefined earlier
     );
