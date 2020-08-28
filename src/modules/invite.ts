@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/indent */
 import Mailgun from 'mailgun-js';
 import jwt from 'jsonwebtoken';
-import Papa from 'papaparse';
 import { UpdateWriteOpResult } from 'mongodb';
 
 import { MetaData } from 'db/notifications';
@@ -80,7 +79,6 @@ const addUnsubLink = (message: string, unsubLink: string): string => {
 const generateInviteLink = (email: string): string => {
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
-        expiresIn: '7d',
     };
     const payload = { email };
     const token = jwt.sign(payload, env.JWT_SECRET, jwtOptions);
