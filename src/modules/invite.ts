@@ -219,10 +219,6 @@ const inviteCSVList = async (
     data: InviteData,
     previewEmail?: string
 ): Promise<Array<string | Mailgun.messages.SendResponse>> => {
-    // const result = Papa.parse(csvString, {
-    //     header: true,
-    // });
-    // const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
     const unsubSet = new Set(
         await Notifications.getUnsubList(data.region) // Checked if undefined earlier
     );
