@@ -4,9 +4,9 @@ import env from 'config/env';
 import logger from '../lib/logger';
 import notificationConsumer from '../lib/jobs/notifications';
 
-const MS_TO_SEC = 1000;
-const SEC_TO_MIN = 60;
-const NOTIFICATION_INTERVAL = MS_TO_SEC * SEC_TO_MIN * 1; // 20 min
+const MS_IN_SEC = 1000;
+const SEC_IN_MIN = 60;
+const NOTIFICATION_INTERVAL = MS_IN_SEC * SEC_IN_MIN * 20; // 20 min
 
 async function makeServer() {
     try {
