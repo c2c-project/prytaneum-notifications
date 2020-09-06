@@ -26,7 +26,7 @@ The notification-service manages the notifications that are sent out to potentia
   constituentScope: 'State',
   region: 'example_coast',
   deliveryTime?: 'ISO Date-Time', // Optional, defaults to sending immediatly. Limit of 3 days ahead.
-  townHallID: 'Town Hall ID',
+  townHallId: 'Town Hall ID',
   previewEmail?: 'preview@example.com' // If included a copy of the invite will be sent to the given email address.
 ```
 

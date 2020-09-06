@@ -23,7 +23,7 @@ export interface InviteData {
     region: string;
     deliveryTimeString?: string; // ISO/UTC format
     deliveryTime: Date;
-    townHallID: string;
+    townHallId: string;
     previewEmail?: string;
 }
 
@@ -78,11 +78,11 @@ const addUnsubLink = (message: string, unsubLink: string): string => {
  * @param {string} email
  * @return {string} link string
  */
-const generateInviteLink = (email: string, townHallID: string): string => {
+const generateInviteLink = (email: string, townHallId: string): string => {
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
     };
-    const payload = { email, townHallID };
+    const payload = { email, townHallId };
     const token = jwt.sign(payload, env.JWT_SECRET, jwtOptions);
     return `${env.ORIGIN}/invited/${token}`;
 };
@@ -92,11 +92,11 @@ const generateInviteLink = (email: string, townHallID: string): string => {
  * @param {string} email
  * @return {string} link string
  */
-const generateUnsubscribeLink = (email: string, townHallID: string): string => {
+const generateUnsubscribeLink = (email: string, townHallId: string): string => {
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
     };
-    const payload = { email, townHallID };
+    const payload = { email, townHallId };
     const token = jwt.sign(payload, env.JWT_SECRET, jwtOptions);
     return `${env.ORIGIN}/unsubscribe/${token}`;
 };
@@ -112,14 +112,14 @@ interface RecipiantVariables {
  */
 const generateRecipiantVariables = (
     inviteeList: Array<InviteeData>,
-    townHallID: string
+    townHallId: string
 ): { emails: Array<string>; recipiantVariables: string } => {
     const emails = [];
     const recipiantVariables: RecipiantVariables = {};
     for (let i = 0; i < inviteeList.length; i += 1) {
         const { fName, email } = inviteeList[i];
-        const inviteLink = generateInviteLink(email, townHallID);
-        const unsubLink = generateUnsubscribeLink(email, townHallID);
+        const inviteLink = generateInviteLink(email, townHallId);
+        const unsubLink = generateUnsubscribeLink(email, townHallId);
         recipiantVariables[email] = { fName, inviteLink, unsubLink };
         emails.push(email);
     }
@@ -143,7 +143,7 @@ const inviteMany = async (
     eventDateTime: string,
     constituentScope: string,
     deliveryTime: Date,
-    townHallID: string
+    townHallId: string
 ): Promise<Array<string | Mailgun.messages.SendResponse>> => {
     const results: Array<Promise<string | Mailgun.messages.SendResponse>> = [];
     const inviteBody = getInviteString({
@@ -167,7 +167,7 @@ const inviteMany = async (
         );
         const { emails, recipiantVariables } = generateRecipiantVariables(
             subset,
-            townHallID
+            townHallId
         );
         results.push(
             Email.sendEmail(
@@ -241,7 +241,7 @@ const inviteCSVList = async (
         data.eventDateTime,
         data.constituentScope,
         data.deliveryTime,
-        data.townHallID
+        data.townHallId
     );
 };
 

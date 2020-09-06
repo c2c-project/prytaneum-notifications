@@ -16,7 +16,7 @@ const testMoC = faker.name.firstName();
 const testTopic = 'Technology';
 const testEventDateTime = faker.date.future().toUTCString();
 const testConstituentScope = 'state';
-const testTownHallID = 'id';
+const testTownHallId = 'id';
 const testMetadata: MetaData = {
     name: 'filename',
     size: 500, // Size in bytes
@@ -105,7 +105,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
@@ -123,7 +123,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
@@ -141,7 +141,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .field('previewEmail', faker.internet.email())
                 .attach(
                     'inviteFile',
@@ -160,7 +160,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
@@ -177,7 +177,7 @@ describe('index', () => {
                 .field('eventDateTime', testEventDateTime)
                 .field('constituentScope', testConstituentScope)
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
@@ -195,7 +195,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', 'invalid')
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
@@ -213,7 +213,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
@@ -231,7 +231,7 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .field('townHallID', testTownHallID)
+                .field('townHallId', testTownHallId)
                 .attach(
                     'inviteFile',
                     fs.createReadStream(
