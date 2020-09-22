@@ -129,23 +129,22 @@ const generateRecipiantVariables = (
 /**
  * @description sends out invites to a list of potential users
  * @param {string} inviteeList list of invitee data
- * @param {string} MoC Member of Congress
- * @param {string} topic Topic for the Town Hall
- * @param {string} eventDateTime The event date and time
- * @param {string} constituentScope the constituent scope
- * @param {Date} deliveryTime the date & time that the email should be sent out as Date object
+ * @param {string} inviteData Invite specific data
  * @return {Promise<Array<string | Mailgun.messages.SendResponse>>} promise that resolves to the mailgun email results in array
  */
 const inviteMany = async (
     inviteeList: Array<InviteeData>,
-    MoC: string,
-    topic: string,
-    eventDateTime: string,
-    constituentScope: string,
-    deliveryTime: Date,
-    townHallId: string
+    inviteData: InviteData
 ): Promise<Array<string | Mailgun.messages.SendResponse>> => {
     const results: Array<Promise<string | Mailgun.messages.SendResponse>> = [];
+    const {
+        MoC,
+        topic,
+        eventDateTime,
+        constituentScope,
+        deliveryTime,
+        townHallId,
+    } = inviteData;
     const inviteBody = getInviteString({
         MoC,
         topic,
@@ -190,7 +189,7 @@ const validateData = (data: InviteData): void => {
         data.constituentScope === undefined ||
         data.region === undefined
     )
-        throw new ClientError('Undefined data');
+        throw new ClientError('Invalid Form Data');
 };
 
 /**
@@ -234,15 +233,7 @@ const inviteCSVList = async (
             fName: 'fName',
             lName: 'lName',
         } as InviteeData);
-    return inviteMany(
-        filteredInviteeList,
-        data.MoC, // Checked if undefined earlier
-        data.topic,
-        data.eventDateTime,
-        data.constituentScope,
-        data.deliveryTime,
-        data.townHallId
-    );
+    return inviteMany(filteredInviteeList, data);
 };
 
 const addInviteHistory = (
