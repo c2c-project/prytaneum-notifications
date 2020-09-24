@@ -5,10 +5,10 @@ import fs from 'fs';
 import csvParser from 'csv-parser';
 
 import { ClientError } from 'lib/errors';
-import Notifications from '../lib/notifications';
-import Invite, { InviteData, InviteeData } from '../modules/invite';
-import Subscribe, { SubscribeData } from '../modules/subscribe';
-import logger from '../lib/logger';
+import Notifications from 'lib/notifications';
+import logger from 'lib/logger';
+import Invite, { InviteData, InviteeData } from 'modules/invite';
+import Subscribe, { SubscribeData } from 'modules/subscribe';
 
 const router = express.Router();
 
