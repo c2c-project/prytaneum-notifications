@@ -15,6 +15,9 @@ const router = express.Router();
 // Multer setup
 const storage = multer.diskStorage({
     destination(req, file, cb) {
+        if (!fs.existsSync(path.join(__dirname, '/downloads'))) {
+            fs.mkdirSync(path.join(__dirname, '/downloads'));
+        }
         cb(null, path.join(__dirname, '/downloads/'));
     },
     filename(req, file, cb) {
