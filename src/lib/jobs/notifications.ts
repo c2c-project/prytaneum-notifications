@@ -30,7 +30,7 @@ const notificationConsumer = (): void => {
                 );
             })
             .catch((e) => {
-                logger.error(e);
+                logger.err(e);
             });
     }
     Promise.all(notificationResults)
@@ -38,7 +38,7 @@ const notificationConsumer = (): void => {
             logger.info(`Notification Results: ${JSON.stringify(results)}`);
         })
         .catch((e) => {
-            logger.error(e);
+            logger.err(e);
         });
 };
 
