@@ -12,6 +12,7 @@ const testDoc: NotificationDoc = {
     unsubscribeList: testUnsubscribeList,
     subscribeList: testSubscribeList,
     region: testRegion,
+    inviteHistory: [],
 };
 
 beforeAll(async () => {

@@ -16,6 +16,7 @@ const testMoC = faker.name.firstName();
 const testTopic = 'Technology';
 const testEventDateTime = faker.date.future().toUTCString();
 const testConstituentScope = 'state';
+const testTownHallId = 'id';
 const testMetadata: MetaData = {
     name: 'filename',
     size: 500, // Size in bytes
@@ -63,23 +64,26 @@ const testUnsubCSVData = {
 };
 const testUnsubCSVString = Papa.unparse([testUnsubCSVData]);
 
+const testFilePath = '/tmp/test.csv';
+const testUnsubFilePath = '/tmp/testUnsub.csv';
+const testInvalidFilePath = '/tmp/test.txt';
+
 beforeAll(async () => {
+    // Check if tmp directory exists & create it if not
+    if (!fs.existsSync('/tmp')) {
+        fs.mkdirSync('/tmp');
+    }
     await connect();
     await Collections.Notifications().insertOne(testDoc);
-    fs.writeFile(
-        path.join(__dirname, 'testFiles/test.csv'),
-        testCSVDataString,
-        (err) => {
-            if (err) console.error(err);
-        }
-    );
-    fs.writeFile(
-        path.join(__dirname, '/testFiles/testUnsub.csv'),
-        testUnsubCSVString,
-        (err) => {
-            if (err) console.error(err);
-        }
-    );
+    fs.writeFile(testFilePath, testCSVDataString, (err) => {
+        if (err) console.error(err);
+    });
+    fs.writeFile(testUnsubFilePath, testUnsubCSVString, (err) => {
+        if (err) console.error(err);
+    });
+    fs.writeFile(testInvalidFilePath, testUnsubCSVString, (err) => {
+        if (err) console.error(err);
+    });
 });
 
 afterAll(async () => {
@@ -104,12 +108,8 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/test.csv')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testFilePath));
             expect(status).toStrictEqual(204);
         });
         it('should accept valid data', async () => {
@@ -121,12 +121,22 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/test.csv')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testFilePath));
+            expect(status).toStrictEqual(200);
+        });
+        it('should accept valid data with previewEmail', async () => {
+            const { status } = await request(app)
+                .post('/invite')
+                .field('MoC', testMoC)
+                .field('topic', testTopic)
+                .field('eventDateTime', testEventDateTime)
+                .field('constituentScope', testConstituentScope)
+                .field('deliveryTimeString', validDeliveryTime.toISOString())
+                .field('region', region)
+                .field('townHallId', testTownHallId)
+                .field('previewEmail', faker.internet.email())
+                .attach('inviteFile', fs.createReadStream(testFilePath));
             expect(status).toStrictEqual(200);
         });
         it('should accept valid deliveryTime', async () => {
@@ -138,12 +148,8 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/test.csv')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testFilePath));
             expect(status).toStrictEqual(200);
         });
         it('should accept undefined deliveryTime & replace with valid deliveryTime', async () => {
@@ -154,12 +160,8 @@ describe('index', () => {
                 .field('eventDateTime', testEventDateTime)
                 .field('constituentScope', testConstituentScope)
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/test.csv')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testFilePath));
             expect(status).toStrictEqual(200);
         });
         it('should reject invalid deliveryTime', async () => {
@@ -171,12 +173,8 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', 'invalid')
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/test.csv')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testFilePath));
             expect(status).toStrictEqual(400);
         });
         it('should remove unsubscribed user from list', async () => {
@@ -188,12 +186,8 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/testUnsub.csv')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testUnsubFilePath));
             expect(status).toStrictEqual(400);
         });
         it('should reject invalid filetype', async () => {
@@ -205,12 +199,8 @@ describe('index', () => {
                 .field('constituentScope', testConstituentScope)
                 .field('deliveryTimeString', validDeliveryTime.toISOString())
                 .field('region', region)
-                .attach(
-                    'inviteFile',
-                    fs.createReadStream(
-                        path.join(__dirname, '/testFiles/test.txt')
-                    )
-                );
+                .field('townHallId', testTownHallId)
+                .attach('inviteFile', fs.createReadStream(testInvalidFilePath));
             expect(status).toStrictEqual(400);
         });
         it('should reject no data', async () => {

@@ -20,12 +20,14 @@ The notification-service manages the notifications that are sent out to potentia
 - Request Headers:
 
 ```typescript
-  MoC: 'Member of Congress'
+  MoC: 'Member of Congress',
   topic: 'Town Hall Topic',
-  eventDateTime: 'July 31, 12:00 PM PST'
-  constituentScope: 'State'
-  region: 'example_coast'
-  deliveryTime: 'ISO Date-Time'
+  eventDateTime: 'July 31, 12:00 PM PST',
+  constituentScope: 'State',
+  region: 'example_coast',
+  deliveryTime?: 'ISO Date-Time', // Optional, defaults to sending immediatly. Limit of 3 days ahead.
+  townHallId: 'Town Hall ID',
+  previewEmail?: 'preview@example.com' // If included a copy of the invite will be sent to the given email address.
 ```
 
 - Response:

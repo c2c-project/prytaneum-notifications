@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/indent */
 import Mailgun from 'mailgun-js';
 import jwt from 'jsonwebtoken';
-import Papa from 'papaparse';
 import { UpdateWriteOpResult } from 'mongodb';
 
 import { MetaData } from 'db/notifications';
@@ -24,6 +23,8 @@ export interface InviteData {
     region: string;
     deliveryTimeString?: string; // ISO/UTC format
     deliveryTime: Date;
+    townHallId: string;
+    previewEmail?: string;
 }
 
 export interface InviteEmailParams {
@@ -77,12 +78,11 @@ const addUnsubLink = (message: string, unsubLink: string): string => {
  * @param {string} email
  * @return {string} link string
  */
-const generateInviteLink = (email: string): string => {
+const generateInviteLink = (email: string, townHallId: string): string => {
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
-        expiresIn: '7d',
     };
-    const payload = { email };
+    const payload = { email, townHallId };
     const token = jwt.sign(payload, env.JWT_SECRET, jwtOptions);
     return `${env.ORIGIN}/invited/${token}`;
 };
@@ -92,12 +92,11 @@ const generateInviteLink = (email: string): string => {
  * @param {string} email
  * @return {string} link string
  */
-const generateUnsubscribeLink = (email: string): string => {
+const generateUnsubscribeLink = (email: string, townHallId: string): string => {
     const jwtOptions: jwt.SignOptions = {
         algorithm: 'HS256',
-        expiresIn: '7d',
     };
-    const payload = { email };
+    const payload = { email, townHallId };
     const token = jwt.sign(payload, env.JWT_SECRET, jwtOptions);
     return `${env.ORIGIN}/unsubscribe/${token}`;
 };
@@ -112,14 +111,15 @@ interface RecipiantVariables {
  * @return Returns the recipiant variables along with the list of recipiant emails
  */
 const generateRecipiantVariables = (
-    inviteeList: Array<InviteeData>
+    inviteeList: Array<InviteeData>,
+    townHallId: string
 ): { emails: Array<string>; recipiantVariables: string } => {
     const emails = [];
     const recipiantVariables: RecipiantVariables = {};
     for (let i = 0; i < inviteeList.length; i += 1) {
         const { fName, email } = inviteeList[i];
-        const inviteLink = generateInviteLink(email);
-        const unsubLink = generateUnsubscribeLink(email);
+        const inviteLink = generateInviteLink(email, townHallId);
+        const unsubLink = generateUnsubscribeLink(email, townHallId);
         recipiantVariables[email] = { fName, inviteLink, unsubLink };
         emails.push(email);
     }
@@ -129,22 +129,22 @@ const generateRecipiantVariables = (
 /**
  * @description sends out invites to a list of potential users
  * @param {string} inviteeList list of invitee data
- * @param {string} MoC Member of Congress
- * @param {string} topic Topic for the Town Hall
- * @param {string} eventDateTime The event date and time
- * @param {string} constituentScope the constituent scope
- * @param {Date} deliveryTime the date & time that the email should be sent out as Date object
+ * @param {string} inviteData Invite specific data
  * @return {Promise<Array<string | Mailgun.messages.SendResponse>>} promise that resolves to the mailgun email results in array
  */
 const inviteMany = async (
     inviteeList: Array<InviteeData>,
-    MoC: string,
-    topic: string,
-    eventDateTime: string,
-    constituentScope: string,
-    deliveryTime: Date
+    inviteData: InviteData
 ): Promise<Array<string | Mailgun.messages.SendResponse>> => {
     const results: Array<Promise<string | Mailgun.messages.SendResponse>> = [];
+    const {
+        MoC,
+        topic,
+        eventDateTime,
+        constituentScope,
+        deliveryTime,
+        townHallId,
+    } = inviteData;
     const inviteBody = getInviteString({
         MoC,
         topic,
@@ -157,7 +157,7 @@ const inviteMany = async (
     );
     const subject = 'Prytaneum Invite';
     // TODO Test with 1k invitees to handle Mailgun limit
-    const subsetSize = 999;
+    const subsetSize = 1000;
     for (let i = 0; i < inviteeList.length; i += subsetSize) {
         // Take max of 1k invitees and format to list of emails and string of recipiantVariables
         const subset = inviteeList.slice(
@@ -165,7 +165,8 @@ const inviteMany = async (
             Math.min(inviteeList.length, i + subsetSize)
         );
         const { emails, recipiantVariables } = generateRecipiantVariables(
-            subset
+            subset,
+            townHallId
         );
         results.push(
             Email.sendEmail(
@@ -188,7 +189,7 @@ const validateData = (data: InviteData): void => {
         data.constituentScope === undefined ||
         data.region === undefined
     )
-        throw new ClientError('Undefined data');
+        throw new ClientError('Invalid Form Data');
 };
 
 /**
@@ -213,13 +214,10 @@ const validateDeliveryTime = (deliveryTimeString: string | undefined): Date => {
 };
 
 const inviteCSVList = async (
-    csvString: string,
-    data: InviteData
+    inviteeList: Array<InviteeData>,
+    data: InviteData,
+    previewEmail?: string
 ): Promise<Array<string | Mailgun.messages.SendResponse>> => {
-    const result = Papa.parse(csvString, {
-        header: true,
-    });
-    const inviteeList = result.data as Array<InviteeData>; // Validate these fields on frontend
     const unsubSet = new Set(
         await Notifications.getUnsubList(data.region) // Checked if undefined earlier
     );
@@ -229,14 +227,13 @@ const inviteCSVList = async (
     if (filteredInviteeList.length === 0) {
         throw new ClientError('No valid invitees');
     }
-    return inviteMany(
-        filteredInviteeList,
-        data.MoC, // Checked if undefined earlier
-        data.topic,
-        data.eventDateTime,
-        data.constituentScope,
-        data.deliveryTime
-    );
+    if (previewEmail)
+        filteredInviteeList.push({
+            email: previewEmail,
+            fName: 'fName',
+            lName: 'lName',
+        } as InviteeData);
+    return inviteMany(filteredInviteeList, data);
 };
 
 const addInviteHistory = (

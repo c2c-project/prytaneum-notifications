@@ -17,15 +17,10 @@ services:
             - ./.env:/usr/app/.env
         depends_on:
             - mongo
-            - rabbitmq
     mongo:
         image: mongo:4.2.8-bionic
         ports:
             - '3001:27017'
-    rabbitmq:
-        image: rabbitmq:3.8.5
-        ports:
-            - '5672:5672'
     # mongo-seed:
     #     build: ./seed
     #     links:

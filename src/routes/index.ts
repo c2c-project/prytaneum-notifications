@@ -1,15 +1,30 @@
 import express from 'express';
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import csvParser from 'csv-parser';
 
 import { ClientError } from 'lib/errors';
-import Notifications from '../lib/notifications';
-import Invite, { InviteData } from '../modules/invite';
-import Subscribe, { SubscribeData } from '../modules/subscribe';
-import logger from '../lib/logger';
+import Notifications from 'lib/notifications';
+import logger from 'lib/logger';
+import Invite, { InviteData, InviteeData } from 'modules/invite';
+import Subscribe, { SubscribeData } from 'modules/subscribe';
 
 const router = express.Router();
 
 // Multer setup
+const storage = multer.diskStorage({
+    destination(req, file, cb) {
+        if (!fs.existsSync(path.join(__dirname, '/downloads'))) {
+            fs.mkdirSync(path.join(__dirname, '/downloads'));
+        }
+        cb(null, path.join(__dirname, '/downloads/'));
+    },
+    filename(req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 const fileFilter = (
     req: unknown,
@@ -19,37 +34,71 @@ const fileFilter = (
     if (file.mimetype === 'text/csv') {
         cb(null, true); // Accept
     } else {
-        cb(null, false); // Reject
+        cb(new ClientError('Invalid File')); // Reject
     }
 };
 
 // TODO Discuss storing locally or in memory
-const upload = multer({
+const inviteUpload = multer({
+    storage,
     limits: {
         fileSize: 1024 * 1024 * 10, // 10 MB limit
     },
     fileFilter,
 });
 
-router.post('/invite', upload.single('inviteFile'), async (req, res, next) => {
-    try {
-        if (!req.file) throw new ClientError('Invalid File'); // Check if file is undefined (rejected)
-        const data = req.body as InviteData;
-        Invite.validateData(data);
-        data.deliveryTime = Invite.validateDeliveryTime(
-            data.deliveryTimeString
-        );
-        const csvString = req.file.buffer.toString();
-        const results = await Invite.inviteCSVList(csvString, data);
-        logger.print(JSON.stringify(results));
-        const opResult = await Invite.addInviteHistory(req.file, data.region);
-        logger.print(JSON.stringify(opResult));
-        res.status(200).send();
-    } catch (e) {
-        logger.err(e);
-        next(e);
+router.post(
+    '/invite',
+    inviteUpload.single('inviteFile'), // form-data key
+    async (req, res, next) => {
+        const { file } = req;
+        try {
+            if (!file) throw new ClientError('File undefined'); // Check if file is undefined (rejected)
+            const data = req.body as InviteData;
+            Invite.validateData(data);
+            data.deliveryTime = Invite.validateDeliveryTime(
+                data.deliveryTimeString
+            );
+            const inviteeData: Array<InviteeData> = [];
+            const fileStream = fs.createReadStream(file.path).pipe(csvParser());
+            const BATCH_SIZE = 5000; // Only store 5k invitees in memory at a time.
+            // eslint-disable-next-line no-restricted-syntax
+            for await (const fileData of fileStream) {
+                if (inviteeData.length < BATCH_SIZE) {
+                    inviteeData.push(fileData);
+                } else {
+                    inviteeData.push(fileData); // Push latest one
+                    // Handle and reset dataList
+                    const results = await Invite.inviteCSVList(
+                        inviteeData,
+                        data
+                    );
+                    logger.print(JSON.stringify(results));
+                    inviteeData.splice(0, BATCH_SIZE);
+                }
+            }
+            // Remove file after use
+            fs.unlink(file.path, (err) => {
+                if (err) logger.err(JSON.stringify(err));
+            });
+            if (inviteeData.length > 0) {
+                // Handle any remaining data
+                const results = await Invite.inviteCSVList(inviteeData, data);
+                logger.print(JSON.stringify(results));
+            }
+            res.status(200).send();
+        } catch (e) {
+            if (file) {
+                // Remove file after use
+                fs.unlink(file.path, (err) => {
+                    if (err) logger.err(JSON.stringify(err));
+                });
+            }
+            logger.err(e);
+            next(e);
+        }
     }
-});
+);
 
 router.post('/subscribe', async (req, res, next) => {
     try {
