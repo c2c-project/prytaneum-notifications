@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import request from 'supertest';
 import fs from 'fs';
-import path from 'path';
 import faker from 'faker';
 import Papa from 'papaparse';
 
