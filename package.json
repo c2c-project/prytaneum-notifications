@@ -5,9 +5,12 @@
     "license": "MIT",
     "scripts": {
         "start": "nodemon -e ts,js,json --exec \"babel-node -x \".ts\" src\"",
-        "test": "jest --watchAll --runInBand --coverage",
+        "test": "jest --watchAll=false --runInBand --coverage",
         "test:ci": "jest",
-        "build:types": "tsc --emitDeclarationOnly"
+        "build:types": "tsc --emitDeclarationOnly",
+        "build:app": "babel ./src -d ./dist --extensions \".ts\"",
+        "build": "yarn build:app && yarn build:types",
+        "eslint:github-action": "eslint src/**/*.ts --max-warnings 0"
     },
     "devDependencies": {
         "@babel/cli": "^7.10.3",
