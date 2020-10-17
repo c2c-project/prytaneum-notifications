@@ -6,7 +6,6 @@ declare global {
             ORIGIN?: string;
             CORS_ORIGIN?: string;
             DB_URL?: string;
-            AMQP_URL?: string;
             JWT_SECRET?: string;
             MAILGUN_ORIGIN?: string;
             MAILGUN_API_KEY?: string;
