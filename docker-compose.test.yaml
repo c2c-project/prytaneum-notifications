@@ -1,12 +1,10 @@
 version: '3.8'
 services:
-    notification-service:
+    sut:
         container_name: notification-service
         build:
             context: .
             target: base-stage
-        volumes:
-            - ./src:/usr/app/src
         ports:
             - '3002:3002'
         command: yarn test
@@ -17,9 +15,10 @@ services:
             - ./.babelrc:/usr/app/.babelrc
             - ./.env:/usr/app/.env
             - ./jest.config.js:/usr/app/jest.config.js
+            - ./coverage:/usr/app/coverage
         depends_on:
             - mongo
-        links: 
+        links:
             - mongo
     mongo:
         image: mongo:4.2.8-bionic
