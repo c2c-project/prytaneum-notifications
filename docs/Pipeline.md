@@ -21,3 +21,11 @@
 - 2. Adding onto the docker github action we could simply push the image using the docker push commands.
 
 - NOTE: With either method, it is important to set the build env variables in the automated build configuration (on build tab in dockerhub). The sut service in the `docker-compose-test` file is what allows for automated tests in the dockerhub repo. With automated tests the build will fail if the tests don't pass.
+
+## MISC NOTES
+
+### Dockerfile
+
+- In the dockerfile it is a good convention to not pass the .env file but rather denote the ENV vars. This is because the .env file will only be avaliable on the local version and not in the git or docker repo.
+
+- The ARG keywords allow for the passing of vars as arguments when running the build command. This is not nessisary in the current pipeline, but are an option to use.
