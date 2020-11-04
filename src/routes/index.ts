@@ -56,6 +56,7 @@ router.post(
         const { file } = req;
         try {
             if (!file) throw new ClientError('File undefined'); // Check if file is undefined (rejected)
+            console.log(file);
             const data = req.body as InviteData;
             Invite.validateData(data);
             data.deliveryTime = Invite.validateDeliveryTime(
@@ -63,20 +64,13 @@ router.post(
             );
             const inviteeData: Array<InviteeData> = [];
             const fileStream = fs.createReadStream(file.path).pipe(csvParser());
-            const BATCH_SIZE = 5000; // Only store 5k invitees in memory at a time.
+            const SIZE_LIMIT = 100;
             // eslint-disable-next-line no-restricted-syntax
             for await (const fileData of fileStream) {
-                if (inviteeData.length < BATCH_SIZE) {
+                if (inviteeData.length < SIZE_LIMIT) {
                     inviteeData.push(fileData);
                 } else {
-                    inviteeData.push(fileData); // Push latest one
-                    // Handle and reset dataList
-                    const results = await Invite.inviteCSVList(
-                        inviteeData,
-                        data
-                    );
-                    logger.print(JSON.stringify(results));
-                    inviteeData.splice(0, BATCH_SIZE);
+                    throw new ClientError('Invite list limit exceeded');
                 }
             }
             // Remove file after use
