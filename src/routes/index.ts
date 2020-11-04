@@ -56,7 +56,6 @@ router.post(
         const { file } = req;
         try {
             if (!file) throw new ClientError('File undefined'); // Check if file is undefined (rejected)
-            console.log(file);
             const data = req.body as InviteData;
             Invite.validateData(data);
             data.deliveryTime = Invite.validateDeliveryTime(
