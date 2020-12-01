@@ -47,10 +47,59 @@ const inviteUpload = multer({
     fileFilter,
 });
 
+// TODO Add invite limited route that checks the number of lines/entries in file and limit to 100 max.
+// If over max, return bad response with message relating to limit exceeded
+router.post(
+    '/invite-limited',
+    inviteUpload.single('inviteFile'),
+    async (req, res, next) => {
+        const { file } = req;
+        try {
+            if (!file) throw new ClientError('File undefined'); // Check if file is undefined (rejected)
+            const data = req.body as InviteData;
+            Invite.validateData(data);
+            data.deliveryTime = Invite.validateDeliveryTime(
+                data.deliveryTimeString
+            );
+            const inviteeData: Array<InviteeData> = [];
+            const fileStream = fs.createReadStream(file.path).pipe(csvParser());
+            const SIZE_LIMIT = 100;
+            // eslint-disable-next-line no-restricted-syntax
+            for await (const fileData of fileStream) {
+                if (inviteeData.length < SIZE_LIMIT) {
+                    inviteeData.push(fileData);
+                } else {
+                    throw new ClientError('Invite list limit exceeded');
+                }
+            }
+            // Remove file after use
+            fs.unlink(file.path, (err) => {
+                if (err) logger.err(JSON.stringify(err));
+            });
+            if (inviteeData.length > 0) {
+                // Handle any remaining data
+                const results = await Invite.inviteCSVList(inviteeData, data);
+                logger.print(JSON.stringify(results));
+            }
+            res.status(200).send();
+        } catch (e) {
+            if (file) {
+                // Remove file after use
+                fs.unlink(file.path, (err) => {
+                    if (err) logger.err(JSON.stringify(err));
+                });
+            }
+            logger.err(e);
+            next(e);
+        }
+    }
+);
+
 router.post(
     '/invite',
     inviteUpload.single('inviteFile'), // form-data key
     async (req, res, next) => {
+        // TODO add authentication
         const { file } = req;
         try {
             if (!file) throw new ClientError('File undefined'); // Check if file is undefined (rejected)
