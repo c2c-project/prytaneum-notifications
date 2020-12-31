@@ -8,6 +8,7 @@
         "start": "nodemon -e ts,js,json --exec \"babel-node -x \".ts\" src\"",
         "test": "jest --watchAll=false --runInBand --coverage",
         "test:ci": "jest",
+        "prepare": "yarn build",
         "build:types": "tsc -p tsconfig.prod.json --emitDeclarationOnly",
         "build:app": "babel ./src -d ./dist --extensions \".ts\"",
         "build": "yarn build:app && yarn build:types",
