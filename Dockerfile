@@ -2,7 +2,9 @@
 FROM node:14.7.0-alpine as base-stage
 WORKDIR /usr/app
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile && yarn cache clean
+RUN apk update \
+&& apk add --no-cache git \
+&& yarn install --frozen-lockfile
 EXPOSE 3002
 
 # BUILD
