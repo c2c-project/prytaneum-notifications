@@ -1,8 +1,8 @@
 {
     "name": "prytaneum-notifications",
     "version": "1.0.0",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "dist/app/index.js",
+    "types": "dist/app/index.d.ts",
     "license": "MIT",
     "scripts": {
         "start": "nodemon -e ts,js,json --exec \"babel-node -x \".ts\" src\"",
