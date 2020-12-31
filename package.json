@@ -1,13 +1,14 @@
 {
     "name": "notification-service",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "license": "MIT",
     "scripts": {
         "start": "nodemon -e ts,js,json --exec \"babel-node -x \".ts\" src\"",
         "test": "jest --watchAll=false --runInBand --coverage",
         "test:ci": "jest",
-        "build:types": "tsc --emitDeclarationOnly",
+        "build:types": "tsc -p tsconfig.prod.json --emitDeclarationOnly",
         "build:app": "babel ./src -d ./dist --extensions \".ts\"",
         "build": "yarn build:app && yarn build:types",
         "eslint:github-action": "eslint src/**/*.ts --max-warnings 0"
