@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Response, Request, NextFunction } from 'express';
 
 import env from 'config/env';
